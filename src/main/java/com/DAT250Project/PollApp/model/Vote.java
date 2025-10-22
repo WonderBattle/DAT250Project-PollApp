@@ -12,7 +12,7 @@ public class Vote {
     private Instant publishedAt;
 
     @JsonIgnore
-    private User castBy;
+    private User voter;
 
     @JsonIgnore
     private VoteOption option;
@@ -22,8 +22,8 @@ public class Vote {
 
     }
 
-    public Vote (User castBy, VoteOption option){
-        this.castBy = castBy;
+    public Vote (User voter, VoteOption option){
+        this.voter = voter;
         this.option = option;
         this.publishedAt = Instant.now();
         // CLARA
@@ -51,26 +51,26 @@ public class Vote {
     }
 
     //Relational setters and getters
-    public void setCastBy(User castBy) {
-        this.castBy = castBy;
+    public void setVoter(User voter) {
+        this.voter = voter;
     }
-    public User getCastBy() {
-        return castBy;
+    public User getVoter() {
+        return voter;
     }
 
     public UUID getVoterId() {
-        if (castBy != null) {
-            return castBy.getId();
+        if (voter != null) {
+            return voter.getId();
         }else{
             return null;
         }
     }
 
     public void setVoterId(UUID voterId){
-        if (this.castBy == null) {
-            this.castBy = new User();  // prevent NPE
+        if (this.voter == null) {
+            this.voter = new User();  // prevent NPE
         }
-        this.castBy.setId(voterId);
+        this.voter.setId(voterId);
     }
 
     public void setOption(VoteOption option) {

@@ -219,7 +219,7 @@ public class PollManager {
         vote.setPublishedAt(Instant.now());      // record timestamp
 
         // Link vote to voter and option
-        vote.setCastBy(voter);                   // set user reference
+        vote.setVoter(voter);                   // set user reference
         vote.setOption(option);                  // set chosen option
 
         // Persist in global vote map
