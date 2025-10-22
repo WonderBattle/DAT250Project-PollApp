@@ -54,11 +54,27 @@ public class Vote {
         return castBy;
     }
 
+    public UUID getVoterId() {
+        if (castBy != null) {
+            return castBy.getId();
+        }else{
+            return null;
+        }
+    }
+
     public void setOption(VoteOption option) {
         this.option = option;
     }
     public VoteOption getOption() {
         return option;
+    }
+
+    public UUID getOptionId(){
+        if (option != null){
+            return option.getId();
+        }else{
+            return null;
+        }
     }
 
     //METHODS
