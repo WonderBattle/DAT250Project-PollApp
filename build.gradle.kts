@@ -20,10 +20,19 @@ repositories {
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	//testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    //added
+    // --- TESTING DEPENDENCIES ---
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+    }
+
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+

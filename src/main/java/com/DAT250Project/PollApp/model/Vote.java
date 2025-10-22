@@ -1,5 +1,7 @@
 package com.DAT250Project.PollApp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.Instant;
 import java.util.*;
 
@@ -9,8 +11,10 @@ public class Vote {
 
     private Instant publishedAt;
 
+    @JsonIgnore
     private User castBy;
 
+    @JsonIgnore
     private VoteOption option;
 
     //CONSTRUCTORS
@@ -62,6 +66,13 @@ public class Vote {
         }
     }
 
+    public void setVoterId(UUID voterId){
+        if (this.castBy == null) {
+            this.castBy = new User();  // prevent NPE
+        }
+        this.castBy.setId(voterId);
+    }
+
     public void setOption(VoteOption option) {
         this.option = option;
     }
@@ -75,6 +86,13 @@ public class Vote {
         }else{
             return null;
         }
+    }
+
+    public void setOptionId(UUID optionId){
+        if (this.option == null) {
+            this.option = new VoteOption();
+        }
+        this.option.setId(optionId);
     }
 
     //METHODS

@@ -18,8 +18,10 @@ public class User {
     public User(String username, String email) {
         this.username = username;
         this.email = email;
-        this.createdPolls = new LinkedHashSet<>();
+        //this.createdPolls = new LinkedHashSet<>();
     }
+
+    public User(){}
 
     //SETTERS AND GETTERS
 

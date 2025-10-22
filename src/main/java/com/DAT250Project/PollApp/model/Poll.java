@@ -1,5 +1,7 @@
 package com.DAT250Project.PollApp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.Instant;
 import java.util.*;
 
@@ -13,6 +15,7 @@ public class Poll {
 
     private Instant validUntil;
 
+    @JsonIgnore
     private User createdBy;
 
     private List<VoteOption> options = new ArrayList<>();

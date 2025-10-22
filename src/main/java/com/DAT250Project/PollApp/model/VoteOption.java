@@ -1,5 +1,7 @@
 package com.DAT250Project.PollApp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.*;
 
 public class VoteOption {
@@ -10,6 +12,7 @@ public class VoteOption {
 
     private int presentationOrder;
 
+    @JsonIgnore
     private Poll poll;
 
     private Set<Vote> votes = new LinkedHashSet<>();
