@@ -1,0 +1,69 @@
+/* ----------- Login Card ------------ */
+.login-card {
+    background: #ffffff;
+    border-radius: 24px;
+    width: 700px;
+    height: 400px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 220px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ---------- Text ----------- */
+.welcome {
+    color: #6b4c7b;
+    font-family: "Gasoek One", sans-serif;
+    font-size: 32px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.login-to-vote-or-create-polls {
+    color: #7e6a8e;
+    font-family: "Poppins", sans-serif;
+    font-size: 16px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* ------------ Input Fields -------------- */
+.username-text-box,
+.password-text-box {
+    background: #f3e8f0;
+    border-radius: 12px;
+    width: 320px;
+    height: 40px;
+    border: none;
+    margin-bottom: 20px;
+    padding: 0 12px;
+    font-size: 16px;
+    font-family: "Poppins", sans-serif;
+    color: #5a4d6a;
+    outline: none;
+}
+
+/* ------------- Button ------------- */
+.log-in-button {
+    background: #ffb6c1;
+    border-radius: 16px;
+    width: 320px;
+    height: 54px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    color: #ffffff;
+    font-family: "Gasoek One", sans-serif;
+    font-size: 18px;
+    transition: all 0.2s ease;
+}
+
+.log-in-button:hover {
+    background: #ff9bb0;
+    transform: translateY(-2px);
+}

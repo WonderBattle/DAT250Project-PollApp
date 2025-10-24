@@ -1,0 +1,61 @@
+/* --------------- Global Container ---------------- */
+.desktop-1,
+.desktop-1 * {
+    box-sizing: border-box;
+}
+
+.desktop-1 {
+    background: #fff8f5;
+    min-height: 100vh;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    font-family: "Poppins", sans-serif;
+}
+
+/* -------------- Header --------------- */
+.header {
+    background: #ffdee9;
+    width: 100%;
+    height: 120px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.poll-app-header {
+    color: #6b4c7b;
+    text-align: center;
+    font-family: "Gasoek One", sans-serif;
+    font-size: 56px;
+    font-weight: 400;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/*---------------- Footer -----------------*/
+.rectangle-1 {
+    background: #ffdee9;
+    width: 100%;
+    height: 100px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+._2025-poll-app {
+    color: #6b4c7b;
+    text-align: center;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+}
