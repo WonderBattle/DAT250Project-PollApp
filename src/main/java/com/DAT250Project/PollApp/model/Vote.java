@@ -1,20 +1,25 @@
 package com.DAT250Project.PollApp.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import java.time.Instant;
 import java.util.*;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 public class Vote {
 
     private UUID id;
 
     private Instant publishedAt;
 
-    @JsonIgnore
     private User voter;
 
-    @JsonIgnore
     private VoteOption option;
 
     //CONSTRUCTORS

@@ -1,10 +1,14 @@
 package com.DAT250Project.PollApp.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
 
 import java.time.Instant;
 import java.util.*;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 public class Poll {
 
     private UUID id;
@@ -15,7 +19,6 @@ public class Poll {
 
     private Instant validUntil;
 
-    @JsonIgnore
     private User createdBy;
 
     private List<VoteOption> options = new ArrayList<>();
@@ -99,7 +102,7 @@ public class Poll {
     //METHODS
     //TODO choose between default constructor or parametrized constructor
     public VoteOption addVoteOption(String caption) {
-        int order = options.size();            // <-- Determine presentationOrder
+        int order = options.size()+1;            // <-- Determine presentationOrder
         VoteOption option = new VoteOption(caption, order, this);
         this.options.add(option);
         return option;
