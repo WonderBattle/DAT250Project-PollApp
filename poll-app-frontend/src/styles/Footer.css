@@ -1,0 +1,20 @@
+/*---------------- Footer -----------------*/
+.rectangle-1 {
+    background: #ffdee9;
+    width: 100%;
+    height: 100px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+._2025-poll-app {
+    color: #6b4c7b;
+    text-align: center;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+}
