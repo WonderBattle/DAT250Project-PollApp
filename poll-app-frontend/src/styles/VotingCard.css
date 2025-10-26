@@ -1,0 +1,140 @@
+/*------------poll container card--------------*/
+.poll-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 16px 24px;
+    margin: 20px auto;
+    width: 800px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.15);
+    font-family: "Poppins", sans-serif;
+    color: #5a4d6a;
+    transition: all 0.3s ease;
+}
+
+/*------------poll header--------------*/
+.poll-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.poll-header-text {
+    flex: 1;
+}
+
+/*------------poll question--------------*/
+.poll-question {
+    font-family: "GasoekOne-Regular", sans-serif;
+    font-size: 24px;
+    color: #6b4c7b;
+    margin-bottom: 4px;
+}
+
+.poll-meta {
+    font-size: 14px;
+    color: #8a7b96;
+}
+
+/*------------poll option containers--------------*/
+.poll-body {
+    margin-top: 20px;
+    border-top: 1px solid #f3e8f0;
+    padding-top: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.poll-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.poll-option {
+    background: #f3e8f0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+.poll-option span{
+    flex: 1;
+}
+
+.poll-option:hover {
+    background: #ffdee9;
+}
+
+/*------------voting card buttons--------------*/
+.delete-option-icon {
+    cursor: pointer;
+    color: #d46a6a;
+}
+
+.add-option {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.new-option-input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+}
+
+.add-option-btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: #ffb6c1;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-family: "GasoekOne-Regular", sans-serif;
+}
+
+.poll-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.vote-btn {
+    background: #ffb6c1;
+}
+
+.edit-btn {
+    background: #a48cc8;
+}
+
+.save-btn {
+    background: #6b4c7b;
+}
+
+.poll-buttons button {
+    font-family: "GasoekOne-Regular", sans-serif;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.poll-buttons button:hover {
+    transform: scale(1.05);
+}
