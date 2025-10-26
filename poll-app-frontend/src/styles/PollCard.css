@@ -1,0 +1,122 @@
+/*------------poll container card------------*/
+.poll-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 16px 24px;
+    margin: 20px auto;
+    width: 800px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.15);
+    font-family: "Poppins", sans-serif;
+    color: #5a4d6a;
+    transition: all 0.3s ease;
+}
+
+/*------------poll header above everything------------*/
+.poll-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.poll-header-text {
+    flex: 1;
+}
+
+/*------------question should be visible even in folded state------------*/
+.poll-question {
+    font-family: "GasoekOne-Regular", sans-serif;
+    font-size: 24px;
+    color: #6b4c7b;
+    margin-bottom: 4px;
+}
+
+.poll-meta {
+    font-size: 14px;
+    color: #8a7b96;
+}
+
+.poll-arrow {
+    color: #6b4c7b;
+    transition: transform 0.3s ease;
+}
+
+/*------------poll details should be visible after unfolding card------------*/
+.poll-body {
+    margin-top: 20px;
+    border-top: 1px solid #f3e8f0;
+    padding-top: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/*------------poll options------------*/
+.poll-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.poll-option {
+    background: #f3e8f0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.poll-option:hover {
+    background: #ffdee9;
+}
+
+/*------------buttons like edit, vote, delete------------*/
+.poll-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+button {
+    font-family: "GasoekOne-Regular", sans-serif;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.vote-btn {
+    background: #ffb6c1;
+}
+
+.edit-btn {
+    background: #a48cc8;
+}
+
+.delete-btn {
+    background: #d46a6a;
+}
+
+.poll-footer {
+    text-align: right;
+    margin-top: 15px;
+    font-size: 16px;
+    color: #6b4c7b;
+}

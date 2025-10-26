@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 //PollController — manages polls and their options.
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/polls")
 public class PollController {

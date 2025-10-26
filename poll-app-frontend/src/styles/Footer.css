@@ -2,10 +2,11 @@
 .rectangle-1 {
     background: #ffdee9;
     width: 100%;
-    height: 100px;
-    position: absolute;
+    height: 50px;
+    position: relative;
     bottom: 0;
     left: 0;
+    z-index: 1000;
 }
 
 ._2025-poll-app {
@@ -13,8 +14,9 @@
     text-align: center;
     font-family: "Poppins", sans-serif;
     font-size: 14px;
-    position: absolute;
-    bottom: 25px;
+    position: relative;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 1001;
 }
