@@ -4,6 +4,7 @@ import com.DAT250Project.PollApp.model.*;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Component
@@ -71,26 +72,39 @@ public class PollManager {
         // Assign a new unique ID to the poll
         poll.setId(UUID.randomUUID());
 
+        // Assign validUntil and publishedAt
+        poll.setPublishedAt(Instant.now());
+        // if no validUntil is set by user, set it to +7 days
+        if (poll.getValidUntil() == null) {
+            poll.setValidUntil(Instant.now().plus(7, ChronoUnit.DAYS));
+        }
+
+
         // Register the poll creator (if exists)
         User creator = poll.getCreatedBy();
         if (creator != null) {
-            // Make sure this user exists in our user list
-            if (!users.containsKey(creator.getId())) {
-                // If not found, add the user
+            // If user exists in the map, use the same in-memory object
+            User existingUser = users.get(creator.getId());
+            if (existingUser == null) {
                 users.put(creator.getId(), creator);
+                existingUser = creator;
             }
-            // Add this poll to the creator’s createdPolls set
-            creator.getCreatedPolls().add(poll);
+
+            // Ensure bidirectional link uses the same object reference
+            poll.setCreatedBy(existingUser);
+            existingUser.getCreatedPolls().add(poll);
         }
 
         // Save the poll in the polls map
         polls.put(poll.getId(), poll);
 
         // Also register all options inside this poll
+        int order = 1;
         if (poll.getOptions() != null) {
             for (VoteOption option : poll.getOptions()) {
                 option.setId(UUID.randomUUID());
                 option.setPoll(poll);
+                option.setPresentationOrder(order++);
                 options.put(option.getId(), option);
             }
         }
@@ -324,6 +338,8 @@ public class PollManager {
 
     // Delete vote by id
     public Vote deleteVoteById(UUID voteId) {
+        Vote vote = votes.get(voteId);
+        vote.getOption().getVotes().remove(vote);
         return votes.remove(voteId);
     }
 

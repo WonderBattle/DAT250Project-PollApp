@@ -1,9 +1,13 @@
 package com.DAT250Project.PollApp.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
 
 import java.util.*;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 public class VoteOption {
 
     private UUID id;
@@ -12,7 +16,7 @@ public class VoteOption {
 
     private int presentationOrder;
 
-    @JsonIgnore
+    @JsonIdentityReference(alwaysAsId = true)
     private Poll poll;
 
     private Set<Vote> votes = new LinkedHashSet<>();
