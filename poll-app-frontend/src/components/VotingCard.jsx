@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import "../styles/VotingCard.css";
-import { Trash2 } from "lucide-react";
+import {Trash2} from "lucide-react";
 
 //----------------------------constants variables-------------------------------
-const VotingCard = ({ poll }) => {
+const VotingCard = ({poll}) => {
     const [selectedOption, setSelectedOption] = useState(null);
     const [options, setOptions] = useState(poll.options || []);
     const [newOption, setNewOption] = useState("");
@@ -59,12 +59,14 @@ const VotingCard = ({ poll }) => {
                             <input
                                 type="radio"
                                 name={`poll-${poll.id}`}
-                                value={opt}
-                                checked={selectedOption === opt}
-                                onChange={() => setSelectedOption(opt)}
+                                value={opt.text}
+                                checked={selectedOption === opt.text}
+                                onChange={() => setSelectedOption(opt.text)}
                                 disabled={editMode}
                             />
-                            <span>{opt}</span>
+                            <span>
+  {opt.text} ({opt.votes} votes)
+</span>
                             {editMode && (
                                 <Trash2
                                     size={18}

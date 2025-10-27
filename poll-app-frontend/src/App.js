@@ -9,7 +9,7 @@ function App() {
         <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/dashboard" element={<Dashboard/>} />
-            <Route path="/vote" element={<VotingPage/>}/>
+            <Route path="/vote/:pollId" element={<VotingPage />} />
         </Routes>
     );
 }

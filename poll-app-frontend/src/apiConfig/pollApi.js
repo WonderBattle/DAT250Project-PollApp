@@ -17,3 +17,13 @@ export  const  getPollById = async (pollId) => {
     const  response = await  axiosConfig.get(`/polls/${pollId}`);
     return response.data;
 };
+
+//----------------deleting a poll----------------------
+export const deletePoll = async (pollId) => {
+    await  axiosConfig(`/polls/${pollId}`);
+};
+
+export const addOption = async (pollId, optionData) => {
+    const response = await axiosConfig.post(`/polls/${pollId}/options`, optionData);
+    return response.data;
+};

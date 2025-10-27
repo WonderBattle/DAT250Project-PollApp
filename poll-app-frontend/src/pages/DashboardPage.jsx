@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import PollCard from "../components/PollCard";
 import Header from "../components/Header";
 import "../styles/Dashboard.css";
-//import { getAllPolls } from "../apiConfig/pollApi";
+import {deletePoll} from "../apiConfig/pollApi";
+import { getAllPolls } from "../apiConfig/pollApi";
 
 
 //------------------sample poll data just for visual testing------------------
-const samplePolls = [
+/*const samplePolls = [
     {
         id: 1,
         question: "What’s your favorite pastel color?",
@@ -15,37 +16,40 @@ const samplePolls = [
         options: ["Pink", "Lavender", "Mint", "Peach"],
         totalVotes: 12,
     }
-];
+];*/
 
 
 const Dashboard = () => {
     const [polls, setPolls] = useState([]);
 
-    //-------------fetch polls from backend ----------------
-   /* useEffect(() => {
+    useEffect(() => {
         const fetchPolls = async () => {
             try {
                 const data = await getAllPolls();
                 setPolls(data);
             } catch (error) {
-                console.log("failed to fetch polls:", error);
+                console.error("Failed to fetch polls:", error);
             }
         };
         fetchPolls();
-    }, []);*/
+    }, []);
 
     //--------------------simulate loading polls--------------------
-    useEffect(() => {
+    /*useEffect(() => {
         setTimeout(() => {
             setPolls(samplePolls);
         }, 500);
-    }, []);
+    }, []);*/
 
 
     //-------------------delete poll -------------------
-    const handleDeletePoll = (pollId) => {
-        setPolls(polls.filter((p) => p.id !== pollId));
-        console.log("Deleted poll with id:", pollId);
+    const handleDeletePoll = async (pollId) => {
+        try {
+            await deletePoll(pollId);
+            setPolls((prev) => prev.filter((p) => p.id !== pollId));
+        } catch (error) {
+            console.error("Failed to delete poll:", error);
+        }
     };
 
     //-------------------vote click (redirect later) -------------------
@@ -66,7 +70,7 @@ const Dashboard = () => {
                             key={poll.id}
                             poll={poll}
                             onDelete={handleDeletePoll}
-                            onVote={handleVoteClick}
+                            onVote  = {handleVoteClick}
                         />
                     ))
                 ) : (

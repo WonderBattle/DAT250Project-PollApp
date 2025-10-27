@@ -15,7 +15,7 @@ const PollCard = ({ poll, onDelete }) => {
 
     //-------------------vote button click -----------------
     const handleVoteClick = () => {
-        navigate(`/vote`);
+        navigate(`/vote/${poll.id}`);
     };
 
     return (
