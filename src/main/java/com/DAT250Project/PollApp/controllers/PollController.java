@@ -3,6 +3,8 @@ package com.DAT250Project.PollApp.controllers;
 import com.DAT250Project.PollApp.PollManager;
 import com.DAT250Project.PollApp.model.Poll;
 import com.DAT250Project.PollApp.model.VoteOption;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,7 @@ import java.util.UUID;
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/polls")
+@Tag(name = "Polls", description = "Poll management APIs")
 public class PollController {
 
     private final PollManager pollManager;
@@ -24,6 +27,7 @@ public class PollController {
     }
 
     //Create a poll
+    @Operation(summary = "Create a new poll", description = "Creates a new poll and returns it")
     @PostMapping
     public ResponseEntity<Poll> createPoll(@RequestBody Poll poll) {
         Poll createdPoll = pollManager.createPoll(poll);
@@ -31,12 +35,14 @@ public class PollController {
     }
 
     //Get all polls
+    @Operation(summary = "Get all polls", description = "Returns a list of all polls")
     @GetMapping
     public ResponseEntity<List<Poll>> getAllPolls() {
         return ResponseEntity.ok(pollManager.getAllPolls()); // OK = 200
     }
 
     //Get poll by id
+    @Operation(summary = "Get a poll", description = "Get a poll by its ID")
     @GetMapping("/{pollId}")
     public ResponseEntity<Poll> getPollById(@PathVariable UUID pollId) {
         Poll poll = pollManager.getPollById(pollId);
@@ -48,6 +54,7 @@ public class PollController {
 
     //Delete a poll by id
     //TODO choose between return a Poll or a boolean
+    @Operation(summary = "Delete a poll", description = "Deletes a poll by its ID")
     @DeleteMapping("/{pollId}")
     public ResponseEntity<Poll> deletePoll(@PathVariable UUID pollId) {
         Poll poll = pollManager.deletePollById(pollId);
@@ -69,6 +76,7 @@ public class PollController {
      */
 
     //Add a vote option to a poll
+    @Operation(summary = "Add an option", description = "Add an option to a poll by ID")
     @PostMapping("/{pollId}/options")
     public ResponseEntity<VoteOption> addOption(@PathVariable UUID pollId, @RequestBody VoteOption option) {
         if(pollManager.getPollById(pollId) == null){
@@ -79,6 +87,7 @@ public class PollController {
     }
 
     //Get all vote options in a poll
+    @Operation(summary = "Get all options", description = "Get all options of a poll by its ID")
     @GetMapping("/{pollId}/options")
     public ResponseEntity<List<VoteOption>> getAllOptions (@PathVariable UUID pollId) {
         if (pollManager.getPollById(pollId)==null){
