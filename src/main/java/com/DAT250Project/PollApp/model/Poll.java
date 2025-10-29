@@ -1,26 +1,37 @@
 package com.DAT250Project.PollApp.model;
 
 import com.fasterxml.jackson.annotation.*;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.util.*;
 
+@Entity
+@Table(name = "polls")
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id"
 )
 public class Poll {
 
+    @Id
+    @GeneratedValue
     private UUID id;
 
+    @Column(nullable = false)
     private String question;
 
     private Instant publishedAt;
 
+    @Column(nullable = false)
     private Instant validUntil;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
+    @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("presentationOrder ASC")
     private List<VoteOption> options = new ArrayList<>();
 
     //CONSTRUCTORS

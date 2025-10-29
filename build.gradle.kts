@@ -34,6 +34,19 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.6.0")
 
+    //DataBase
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    runtimeOnly("com.h2database:h2")
+
+    /*
+    // anotations JPA
+    implementation("jakarta.persistence:jakarta.persistence-api:3.2.0")
+    // implementation JPA
+    implementation("org.hibernate.orm:hibernate-core:7.1.1.Final")
+    // driver BD
+    implementation("com.h2database:h2:2.3.232")
+     */
+
 }
 
 tasks.withType<Test> {
