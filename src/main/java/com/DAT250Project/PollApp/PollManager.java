@@ -2,56 +2,72 @@ package com.DAT250Project.PollApp;
 
 import com.DAT250Project.PollApp.model.*;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-@Component
+
+import com.DAT250Project.PollApp.model.*;
+import com.DAT250Project.PollApp.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+
+@Service
 public class PollManager {
 
-    // === In-memory data stores ===
-    private Map<UUID, User> users = new HashMap<>();  // stores all registered users.
-    private Map<UUID, Poll> polls = new HashMap<>();  // stores all created polls.
-    private Map<UUID, VoteOption> options = new HashMap<>();  // stores all vote options (each linked to a poll).
-    private Map<UUID, Vote> votes = new HashMap<>();  // stores all votes (each linked to a user and an option).
+    // === JPA Repositories to replace in-memory data stores ===
+    @Autowired
+    private UserRepository userRepository;           // replaces Map<UUID, User> users
+    @Autowired
+    private PollRepository pollRepository;           // replaces Map<UUID, Poll> polls
+    @Autowired
+    private VoteOptionRepository voteOptionRepository; // replaces Map<UUID, VoteOption> options
+    @Autowired
+    private VoteRepository voteRepository;           // replaces Map<UUID, Vote> votes
 
-    // Constructor (optional)
+    // Constructor (optional) - Spring will handle dependency injection
     public PollManager() {}
 
     //------------------------------------------------ USER ------------------------------------------------------------
 
     // Create user
     public User createUser(User user) {
-        // Generate a new unique ID
-        user.setId(UUID.randomUUID());
-        // Store the user in memory
-        users.put(user.getId(), user);
-        // Return the created user
-        return user;
+        // No need to generate ID manually - JPA will handle it with @GeneratedValue
+        // Store the user in database using repository
+        return userRepository.save(user);
     }
 
     // Get all users
     public List<User> getAllUsers() {
-        // Return a list containing all user objects
-        return new ArrayList<>(users.values());
+        // Return a list containing all user objects from database
+        return userRepository.findAll();
     }
 
     // Get a user by id
     public User getUserById(UUID userId) {
-        // Retrieve a user by ID, or null if not found
-        return users.get(userId);
+        // Retrieve a user by ID from database, or null if not found
+        return userRepository.findById(userId).orElse(null);
     }
 
     // Delete a user by id
     public User deleteUserById(UUID userId) {
-        // Remove and return the user if exists, otherwise null
-        return users.remove(userId);
+        // Find user first to return it, then delete from database
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            userRepository.deleteById(userId);
+        }
+        return user;
     }
 
     // Get polls of a user
     public List<Poll> getPollsByUser(UUID userId) {
-        User user = users.get(userId);
+        User user = userRepository.findById(userId).orElse(null);
         if (user == null) return null;
         // Convert the Set<Poll> to List<Poll> because controller methods return a List<>, not a Set<>
         return new ArrayList<>(user.getCreatedPolls());
@@ -59,7 +75,7 @@ public class PollManager {
 
     //Get votes of a user
     public List<Vote> getVotesByUser(UUID userId) {
-        User user = users.get(userId);
+        User user = userRepository.findById(userId).orElse(null);
         if (user == null) return null;
         // Convert the Set<Poll> to List<Poll> because controller methods return a List<>, not a Set<>
         return new ArrayList<>(user.getVotes());
@@ -69,8 +85,7 @@ public class PollManager {
 
     // Create a poll
     public Poll createPoll(Poll poll) {
-        // Assign a new unique ID to the poll
-        poll.setId(UUID.randomUUID());
+        // No need to assign ID manually - JPA will handle it with @GeneratedValue
 
         // Assign validUntil and publishedAt
         poll.setPublishedAt(Instant.now());
@@ -79,100 +94,87 @@ public class PollManager {
             poll.setValidUntil(Instant.now().plus(7, ChronoUnit.DAYS));
         }
 
-
         // Register the poll creator (if exists)
         User creator = poll.getCreatedBy();
         if (creator != null) {
-            // If user exists in the map, use the same in-memory object
-            User existingUser = users.get(creator.getId());
+            // If user exists in the database, use the managed entity
+            User existingUser = userRepository.findById(creator.getId()).orElse(null);
             if (existingUser == null) {
-                users.put(creator.getId(), creator);
-                existingUser = creator;
+                // Save new user if doesn't exist
+                existingUser = userRepository.save(creator);
             }
 
-            // Ensure bidirectional link uses the same object reference
+            // Ensure bidirectional link uses the managed entity
             poll.setCreatedBy(existingUser);
             existingUser.getCreatedPolls().add(poll);
         }
 
-        // Save the poll in the polls map
-        polls.put(poll.getId(), poll);
+        // Save the poll in the database - this will cascade to options
+        Poll savedPoll = pollRepository.save(poll);
 
-        // Also register all options inside this poll
+        // Set presentation order for options
         int order = 1;
-        if (poll.getOptions() != null) {
-            for (VoteOption option : poll.getOptions()) {
-                option.setId(UUID.randomUUID());
-                option.setPoll(poll);
+        if (savedPoll.getOptions() != null) {
+            for (VoteOption option : savedPoll.getOptions()) {
                 option.setPresentationOrder(order++);
-                options.put(option.getId(), option);
+                // Options will be saved automatically because cascade is configured on Poll entity
             }
         }
 
         // Return the new poll
-        return poll;
+        return savedPoll;
     }
 
     // Get all polls
     public List<Poll> getAllPolls() {
-        // Return all polls as a list
-        return new ArrayList<>(polls.values());
+        // Return all polls as a list from database
+        return pollRepository.findAll();
     }
 
     // Get a poll by id
     public Poll getPollById(UUID pollId) {
-        // Find a poll by ID, or null if not found
-        return polls.get(pollId);
+        // Find a poll by ID from database, or null if not found
+        return pollRepository.findById(pollId).orElse(null);
     }
 
     // Delete a poll by id
     public Poll deletePollById(UUID pollId) {
-        // Remove the poll from the map
-        Poll poll = polls.remove(pollId);
+        // Find the poll first to return it
+        Poll poll = pollRepository.findById(pollId).orElse(null);
 
-        // If found, clean up related data
+        // If found, delete from database - cascading will handle related options if configured
         if (poll != null) {
-            // Remove it from its creator
-            User creator = poll.getCreatedBy();
-            if (creator != null) {
-                creator.getCreatedPolls().remove(poll);
-            }
-
-            if (poll.getOptions() != null) {
-                // Remove all options belonging to this poll
-                for (VoteOption option : poll.getOptions()) {
-                    options.remove(option.getId());
-                }
-            }
-
+            pollRepository.deleteById(pollId);
         }
+
         return poll;
     }
 
     // Add an option to a poll
     public VoteOption addOptionToPoll(UUID pollId, VoteOption option) {
-        // Find the target poll
-        Poll poll = polls.get(pollId);
+        // Find the target poll from database
+        Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return null;
 
-        // Create a unique ID for the new option
-        option.setId(UUID.randomUUID());
-
+        // No need to generate ID manually - JPA will handle it
         // Link it with the poll
         option.setPoll(poll);
 
         // Add it to the poll's option list
         poll.getOptions().add(option);
 
-        // Save to global map
-        options.put(option.getId(), option);
+        // Save to database
+        VoteOption savedOption = voteOptionRepository.save(option);
 
-        return option;
+        // Update the poll to maintain consistency
+        pollRepository.save(poll);
+
+        return savedOption;
     }
 
     // Get all options of a poll
     public List<VoteOption> getAllOptionsByPoll(UUID pollId) {
-        Poll poll = polls.get(pollId);
+        Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return null;
         // Return the list of options for this poll
         return poll.getOptions();
@@ -180,8 +182,7 @@ public class PollManager {
 
     // Get an option by id
     public VoteOption getOptionById(UUID optionId) {
-        VoteOption voteOption = options.get(optionId);
-        if (voteOption == null) return null;
+        VoteOption voteOption = voteOptionRepository.findById(optionId).orElse(null);
         return voteOption;
     }
 
@@ -189,9 +190,9 @@ public class PollManager {
 
     // Check if an option belongs to a poll
     public boolean optionBelongsToPoll(UUID optionId, UUID pollId) {
-        VoteOption option = options.get(optionId);
+        VoteOption option = voteOptionRepository.findById(optionId).orElse(null);
         if (option == null) return false;
-        Poll poll = polls.get(pollId);
+        Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return false;
 
         // Check if this option belongs to the given poll
@@ -201,9 +202,9 @@ public class PollManager {
     // Check if the option exists and belongs to the poll with given ID
     /*
     public boolean optionBelongsToPoll(UUID optionId, UUID pollId) {
-        VoteOption option = options.get(optionId);   // fetch option by id from global map
+        VoteOption option = voteOptionRepository.findById(optionId).orElse(null);   // fetch option by id from database
         if (option == null) return false;            // option not found -> false
-        Poll poll = polls.get(pollId);               // fetch poll by id from global map
+        Poll poll = pollRepository.findById(pollId).orElse(null);               // fetch poll by id from database
         if (poll == null) return false;              // poll not found -> false
 
         // The vote option stores the poll it belongs to; compare by id
@@ -213,10 +214,10 @@ public class PollManager {
 
     // Create a new Vote for a given pollId, voterId and optionId
     public Vote createVote(UUID pollId, UUID voterId, UUID optionId) {
-        // Validate existence of poll, user and option
-        Poll poll = polls.get(pollId);
-        User voter = users.get(voterId);
-        VoteOption option = options.get(optionId);
+        // Validate existence of poll, user and option from database
+        Poll poll = pollRepository.findById(pollId).orElse(null);
+        User voter = userRepository.findById(voterId).orElse(null);
+        VoteOption option = voteOptionRepository.findById(optionId).orElse(null);
 
         if (poll == null || voter == null || option == null) {
             return null; // any missing resource -> fail (controller will return 404 / 400)
@@ -229,34 +230,32 @@ public class PollManager {
 
         // Create Vote instance using your existing Vote constructors
         Vote vote = new Vote();                  // uses default constructor
-        vote.setId(UUID.randomUUID());           // assign id
+        // No need to assign ID manually - JPA will handle it
         vote.setPublishedAt(Instant.now());      // record timestamp
 
         // Link vote to voter and option
         vote.setVoter(voter);                   // set user reference
         vote.setOption(option);                  // set chosen option
 
-        // Persist in global vote map
-        votes.put(vote.getId(), vote);
+        // Persist in database
+        Vote savedVote = voteRepository.save(vote);
 
         // Add the vote to the voter's vote set
-        voter.getVotes().add(vote);
+        voter.getVotes().add(savedVote);
+        userRepository.save(voter); // Update user to maintain consistency
 
         // Add the vote to the option's vote set
-        option.getVotes().add(vote);
+        option.getVotes().add(savedVote);
+        voteOptionRepository.save(option); // Update option to maintain consistency
 
-        // Do NOT set any poll on vote (model doesn't have that field)
-        // Do NOT try to add the vote to poll (poll has no votes collection)
-
-        return vote;
+        return savedVote;
     }
-
 
     // Update a user's vote in a poll: change their chosen option to newOptionId
     public Vote updateVote(UUID pollId, UUID voterId, UUID newOptionId) {
-        Poll poll = polls.get(pollId);
-        User voter = users.get(voterId);
-        VoteOption newOption = options.get(newOptionId);
+        Poll poll = pollRepository.findById(pollId).orElse(null);
+        User voter = userRepository.findById(voterId).orElse(null);
+        VoteOption newOption = voteOptionRepository.findById(newOptionId).orElse(null);
 
         // Basic existence checks
         if (poll == null || voter == null || newOption == null) return null;
@@ -292,26 +291,28 @@ public class PollManager {
         VoteOption oldOption = existingVote.getOption();
         if (oldOption != null) {
             oldOption.getVotes().remove(existingVote);
+            voteOptionRepository.save(oldOption); // Update old option
         }
 
         // Assign the new option and add to its votes set
         existingVote.setOption(newOption);
         newOption.getVotes().add(existingVote);
 
-        // Voter->votes map already contains this vote, so no change needed there
+        // Save the updated vote and option
+        Vote updatedVote = voteRepository.save(existingVote);
+        voteOptionRepository.save(newOption);
 
-        return existingVote;
+        return updatedVote;
     }
-
 
     // Get all votes
     public List<Vote> getAllVotes() {
-        return new ArrayList<>(votes.values());
+        return voteRepository.findAll();
     }
 
     // Get the votes for an option
     public List<Vote> getVotesByOption(UUID optionId) {
-        VoteOption option = options.get(optionId);
+        VoteOption option = voteOptionRepository.findById(optionId).orElse(null);
         if (option == null) return null;
 
         return new ArrayList<>(option.getVotes());
@@ -320,7 +321,7 @@ public class PollManager {
     // Get the votes for a poll
     // Return list of votes for a poll by aggregating votes from each option
     public List<Vote> getVotesByPoll(UUID pollId) {
-        Poll poll = polls.get(pollId);
+        Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return Collections.emptyList();
 
         List<Vote> pollVotes = new ArrayList<>();
@@ -330,19 +331,28 @@ public class PollManager {
         return pollVotes;
     }
 
-
     // Get a vote by id
     public Vote getVoteById(UUID voteId) {
-        return votes.get(voteId);
+        return voteRepository.findById(voteId).orElse(null);
     }
 
     // Delete vote by id
     public Vote deleteVoteById(UUID voteId) {
-        Vote vote = votes.get(voteId);
-        vote.getOption().getVotes().remove(vote);
-        return votes.remove(voteId);
+        Vote vote = voteRepository.findById(voteId).orElse(null);
+        if (vote != null) {
+            // Remove from option's votes
+            if (vote.getOption() != null) {
+                vote.getOption().getVotes().remove(vote);
+                voteOptionRepository.save(vote.getOption());
+            }
+            // Remove from user's votes
+            if (vote.getVoter() != null) {
+                vote.getVoter().getVotes().remove(vote);
+                userRepository.save(vote.getVoter());
+            }
+            // Delete the vote
+            voteRepository.deleteById(voteId);
+        }
+        return vote;
     }
-
-
-
 }
