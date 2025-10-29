@@ -4,23 +4,33 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import jakarta.persistence.*;
 
 import java.util.*;
 
+@Entity
+@Table(name = "users")
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id"
 )
 public class User {
 
+    @Id
+    @GeneratedValue
     private UUID id;
 
+    //Todo revise if we want unique or not
+    @Column(unique = true, nullable = false)
     private String username;
 
+    @Column(unique = true, nullable = false)
     private String email;
 
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Poll> createdPolls = new LinkedHashSet<>();
 
+    @OneToMany(mappedBy = "voter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Vote> votes = new LinkedHashSet<>();
 
     //CONSTRUCTORS

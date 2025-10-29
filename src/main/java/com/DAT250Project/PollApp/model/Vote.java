@@ -4,22 +4,31 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.util.*;
 
+@Entity
+@Table(name = "votes")
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id"
 )
 public class Vote {
 
+    @Id
+    @GeneratedValue
     private UUID id;
 
     private Instant publishedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "voter_id", nullable = false)
     private User voter;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "option_id", nullable = false)
     private VoteOption option;
 
     //CONSTRUCTORS
