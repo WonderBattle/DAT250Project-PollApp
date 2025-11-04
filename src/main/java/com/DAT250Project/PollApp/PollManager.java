@@ -182,6 +182,16 @@ public class PollManager {
         return savedOption;
     }
 
+    //Delete an option from a poll
+    public VoteOption deleteOptionById(UUID optionId){
+        VoteOption voteOption = voteOptionRepository.findById(optionId).orElse(null);
+
+        if (voteOption != null){
+            voteOptionRepository.deleteById(optionId);
+        }
+        return voteOption;
+    }
+
     // Get all options of a poll
     public List<VoteOption> getAllOptionsByPoll(UUID pollId) {
         /*  Before DB

@@ -86,6 +86,17 @@ public class PollController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created); // CREATED = 201
     }
 
+    //Delete a vote option of a poll
+    @Operation(summary = "Delete a vote option", description = "Deletes a vote option by its ID")
+    @DeleteMapping("/{pollId}/options/{optionId}")
+    public ResponseEntity<VoteOption> deleteOption(@PathVariable UUID pollId, @PathVariable UUID optionId) {
+        VoteOption voteOption = pollManager.deleteOptionById(optionId);
+        if (voteOption == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.noContent().build();
+    }
+
     //Get all vote options in a poll
     @Operation(summary = "Get all options", description = "Get all options of a poll by its ID")
     @GetMapping("/{pollId}/options")
