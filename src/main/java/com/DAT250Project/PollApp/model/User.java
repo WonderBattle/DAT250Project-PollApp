@@ -28,6 +28,7 @@ public class User {
     private String email;
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private Set<Poll> createdPolls = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "voter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

@@ -26,6 +26,7 @@ public class VoteOption {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "poll_id", nullable = false)
     @JsonIdentityReference(alwaysAsId = true)
+    @JsonBackReference
     private Poll poll;
 
     @OneToMany(mappedBy = "option", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

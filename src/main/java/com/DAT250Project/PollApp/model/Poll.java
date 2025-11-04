@@ -28,6 +28,7 @@ public class Poll {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
+    @JsonBackReference
     private User createdBy;
 
     @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -57,6 +58,7 @@ public class Poll {
         int i = 1;
         for(VoteOption option : options) {
             option.setPresentationOrder(i);
+            option.setPoll(this);
             this.options.add(option);
             i++;
         }
