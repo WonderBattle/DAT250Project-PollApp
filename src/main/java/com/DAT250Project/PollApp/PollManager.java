@@ -100,13 +100,18 @@ public class PollManager {
             // If user exists in the database, use the managed entity
             User existingUser = userRepository.findById(creator.getId()).orElse(null);
             if (existingUser == null) {
+                //TODO respone not user defined
+                return null;
                 // Save new user if doesn't exist
-                existingUser = userRepository.save(creator);
+                //existingUser = userRepository.save(creator);
             }
 
             // Ensure bidirectional link uses the managed entity
             poll.setCreatedBy(existingUser);
             existingUser.getCreatedPolls().add(poll);
+        }else{
+            //TODO respone not user defined
+            return null;
         }
 
         // Save the poll in the database - this will cascade to options
@@ -139,10 +144,12 @@ public class PollManager {
 
     // Delete a poll by id
     public Poll deletePollById(UUID pollId) {
+
         // Find the poll first to return it
         Poll poll = pollRepository.findById(pollId).orElse(null);
 
-        // If found, delete from database - cascading will handle related options if configured
+        // If found, delete from database - cascading will handle related options
+        // todo revise cascade problems
         if (poll != null) {
             pollRepository.deleteById(pollId);
         }
@@ -152,6 +159,9 @@ public class PollManager {
 
     // Add an option to a poll
     public VoteOption addOptionToPoll(UUID pollId, VoteOption option) {
+        /*  Before DB
+
+         */
         // Find the target poll from database
         Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return null;
@@ -172,8 +182,21 @@ public class PollManager {
         return savedOption;
     }
 
+    //Delete an option from a poll
+    public VoteOption deleteOptionById(UUID optionId){
+        VoteOption voteOption = voteOptionRepository.findById(optionId).orElse(null);
+
+        if (voteOption != null){
+            voteOptionRepository.deleteById(optionId);
+        }
+        return voteOption;
+    }
+
     // Get all options of a poll
     public List<VoteOption> getAllOptionsByPoll(UUID pollId) {
+        /*  Before DB
+
+         */
         Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return null;
         // Return the list of options for this poll
@@ -182,6 +205,9 @@ public class PollManager {
 
     // Get an option by id
     public VoteOption getOptionById(UUID optionId) {
+        /*  Before DB
+
+         */
         VoteOption voteOption = voteOptionRepository.findById(optionId).orElse(null);
         return voteOption;
     }
@@ -190,6 +216,9 @@ public class PollManager {
 
     // Check if an option belongs to a poll
     public boolean optionBelongsToPoll(UUID optionId, UUID pollId) {
+        /*  Before DB
+
+         */
         VoteOption option = voteOptionRepository.findById(optionId).orElse(null);
         if (option == null) return false;
         Poll poll = pollRepository.findById(pollId).orElse(null);
@@ -214,6 +243,9 @@ public class PollManager {
 
     // Create a new Vote for a given pollId, voterId and optionId
     public Vote createVote(UUID pollId, UUID voterId, UUID optionId) {
+        /*  Before DB
+
+         */
         // Validate existence of poll, user and option from database
         Poll poll = pollRepository.findById(pollId).orElse(null);
         User voter = userRepository.findById(voterId).orElse(null);
@@ -253,6 +285,9 @@ public class PollManager {
 
     // Update a user's vote in a poll: change their chosen option to newOptionId
     public Vote updateVote(UUID pollId, UUID voterId, UUID newOptionId) {
+        /*  Before DB
+
+         */
         Poll poll = pollRepository.findById(pollId).orElse(null);
         User voter = userRepository.findById(voterId).orElse(null);
         VoteOption newOption = voteOptionRepository.findById(newOptionId).orElse(null);
@@ -307,11 +342,17 @@ public class PollManager {
 
     // Get all votes
     public List<Vote> getAllVotes() {
+        /*  Before DB
+
+         */
         return voteRepository.findAll();
     }
 
     // Get the votes for an option
     public List<Vote> getVotesByOption(UUID optionId) {
+        /*  Before DB
+
+         */
         VoteOption option = voteOptionRepository.findById(optionId).orElse(null);
         if (option == null) return null;
 
@@ -321,6 +362,9 @@ public class PollManager {
     // Get the votes for a poll
     // Return list of votes for a poll by aggregating votes from each option
     public List<Vote> getVotesByPoll(UUID pollId) {
+        /*  Before DB
+
+         */
         Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return Collections.emptyList();
 
@@ -333,11 +377,17 @@ public class PollManager {
 
     // Get a vote by id
     public Vote getVoteById(UUID voteId) {
+        /*  Before DB
+
+         */
         return voteRepository.findById(voteId).orElse(null);
     }
 
     // Delete vote by id
     public Vote deleteVoteById(UUID voteId) {
+        /*  Before DB
+
+         */
         Vote vote = voteRepository.findById(voteId).orElse(null);
         if (vote != null) {
             // Remove from option's votes
