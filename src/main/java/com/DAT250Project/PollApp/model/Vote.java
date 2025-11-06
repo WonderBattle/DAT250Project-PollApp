@@ -1,9 +1,6 @@
 package com.DAT250Project.PollApp.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -25,10 +22,12 @@ public class Vote {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voter_id", nullable = false)
+    @JsonIdentityReference(alwaysAsId = true)
     private User voter;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "option_id", nullable = false)
+    @JsonIdentityReference(alwaysAsId = true)
     private VoteOption option;
 
     //CONSTRUCTORS

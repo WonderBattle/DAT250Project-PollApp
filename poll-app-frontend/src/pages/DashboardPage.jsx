@@ -26,9 +26,16 @@ const Dashboard = () => {
         const fetchPolls = async () => {
             try {
                 const data = await getAllPolls();
+
+                if (!data || data.length === 0) {
+                    console.warn("No polls found: The database is empty.");
+                } else {
+                    console.log(`Successfully fetched ${data.length} polls from backend.`);
+                }
+
                 setPolls(data);
             } catch (error) {
-                console.error("Failed to fetch polls:", error);
+                console.error("Error fetching polls from backend:", error.message || error);
             }
         };
         fetchPolls();

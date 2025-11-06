@@ -5,7 +5,9 @@ import {Trash2} from "lucide-react";
 //----------------------------constants variables-------------------------------
 const VotingCard = ({poll}) => {
     const [selectedOption, setSelectedOption] = useState(null);
-    const [options, setOptions] = useState(poll.options || []);
+    const [options, setOptions] = useState(
+        poll.options ? poll.options.map((o) => ({ ...o, votes: o.votes || [] })) : []
+    );
     const [newOption, setNewOption] = useState("");
     const [editMode, setEditMode] = useState(false);
 
@@ -25,17 +27,51 @@ const VotingCard = ({poll}) => {
     };
 
     //----------------------------adding a new vote option-------------------------------
-    const handleAddOption = () => {
+    const handleAddOption = async () => {
         const trimmed = newOption.trim();
         if (!trimmed) return alert("Option cannot be empty");
-        if (options.includes(trimmed)) return alert("Option already exists");
-        setOptions([...options, trimmed]);
-        setNewOption("");
+        if (options.some((o) => o.caption === trimmed)) return alert("Option already exists");
+
+        try {
+            const response = await fetch(`http://localhost:8080/polls/${poll.id}/options`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    caption: trimmed,
+                    presentationOrder: options.length + 1
+                })
+            });
+
+            if (!response.ok) throw new Error();
+
+            const created = await response.json();
+
+            setOptions([...options, created]); // backend returns the true object
+            setNewOption("");
+
+        } catch (error) {
+            console.error(error);
+            alert("Failed to add option");
+        }
     };
 
     //----------------------------deleting any vote option-------------------------------
-    const handleDeleteOption = (opt) => {
-        setOptions(options.filter((o) => o !== opt));
+    const handleDeleteOption = async (opt) => {
+        try {
+            // if it's an existing option -> backend ID exists too
+            if (opt.id) {
+                await fetch(`http://localhost:8080/polls/${poll.id}/options/${opt.id}`, {
+                    method: "DELETE",
+                });
+            }
+
+            // remove from the UI
+            setOptions(options.filter((o) => o.id !== opt.id));
+
+        } catch (error) {
+            console.error("Failed to delete option:", error);
+            alert("Error deleting option");
+        }
     };
 
     //----------------------------returning html-------------------------------
@@ -59,14 +95,14 @@ const VotingCard = ({poll}) => {
                             <input
                                 type="radio"
                                 name={`poll-${poll.id}`}
-                                value={opt.text}
-                                checked={selectedOption === opt.text}
-                                onChange={() => setSelectedOption(opt.text)}
+                                value={opt.caption}
+                                checked={selectedOption === opt.caption}
+                                onChange={() => setSelectedOption(opt.caption)}
                                 disabled={editMode}
                             />
                             <span>
-  {opt.text} ({opt.votes} votes)
-</span>
+      {opt.caption} ({opt.votes ? opt.votes.length : 0} votes)
+    </span>
                             {editMode && (
                                 <Trash2
                                     size={18}

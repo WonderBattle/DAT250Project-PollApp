@@ -24,7 +24,7 @@ const PollCard = ({ poll, onDelete }) => {
                 <div className="poll-header-text">
                     <h2 className="poll-question">{poll.question}</h2>
                     <p className="poll-meta">
-                        Created by <strong>{poll.createdBy}</strong> | Valid until:{" "}
+                        Created by <strong>{poll.createdBy?.username || "Unknown"}</strong> | Valid until:{" "}
                         {poll.validUntil ? new Date(poll.validUntil).toLocaleDateString() : "N/A"}
                     </p>
                 </div>

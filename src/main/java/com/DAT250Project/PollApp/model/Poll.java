@@ -8,10 +8,8 @@ import java.util.*;
 
 @Entity
 @Table(name = "polls")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Poll {
 
     @Id
@@ -26,11 +24,12 @@ public class Poll {
     @Column(nullable = false)
     private Instant validUntil;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by", nullable = false)
+    @JsonIdentityReference(alwaysAsId = true)
     private User createdBy;
 
-    @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @OrderBy("presentationOrder ASC")
     private List<VoteOption> options = new ArrayList<>();
 
