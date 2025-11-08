@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import "../styles/LoginForm.css";
+import { register } from "../apiConfig/authApi";
 
 //-----------------------constant variables----------------------------
 
@@ -15,6 +16,7 @@ const RegisterForm = ({onSwitch}) => {
             return;
         }
 
+        /*
         try {
             // Fake register for now
             const newUser = { username, email };
@@ -26,6 +28,21 @@ const RegisterForm = ({onSwitch}) => {
             console.error("Registration error:", error);
             alert("Something went wrong");
         }
+         */
+
+        try {
+            // Call backend register endpoint
+            await register(username, email, password);
+            console.log("Registered user:", { username, email });
+            alert("Registration successful! Please log in.");
+            onSwitch(); // switch back to login form
+        } catch (error) {
+            console.error("Registration error:", error);
+            // If server returns a message, show it; otherwise generic message
+            const msg = error?.response?.data || "Something went wrong";
+            alert(`Registration failed: ${msg}`);
+        }
+
     };
 
     //-----------------------chtml returning----------------------------

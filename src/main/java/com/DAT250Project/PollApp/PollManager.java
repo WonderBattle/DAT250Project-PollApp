@@ -1,6 +1,7 @@
 package com.DAT250Project.PollApp;
 
 import com.DAT250Project.PollApp.model.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,10 @@ public class PollManager {
     @Autowired
     private VoteRepository voteRepository;           // replaces Map<UUID, Vote> votes
 
+    // ------ NEW : Security
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     // Constructor (optional) - Spring will handle dependency injection
     public PollManager() {}
 
@@ -38,8 +43,10 @@ public class PollManager {
 
     // Create user
     public User createUser(User user) {
-        // No need to generate ID manually - JPA will handle it with @GeneratedValue
-        // Store the user in database using repository
+        // If password provided, hash it before saving
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         return userRepository.save(user);
     }
 

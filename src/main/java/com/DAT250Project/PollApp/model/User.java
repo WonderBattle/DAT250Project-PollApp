@@ -18,12 +18,23 @@ public class User {
     @GeneratedValue
     private UUID id;
 
-    //Todo revise if we want unique or not
+    //DONE: revise if we want unique or not - We want unique, important for security
     @Column(unique = true, nullable = false)
     private String username;
 
     @Column(unique = true, nullable = false)
     private String email;
+
+    // ---------- NEW : Security -------------------
+    // password (BCrypt hashed) - do NOT expose it in API responses
+    @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // don't serialize back to client
+    //@JsonProperty(access = WRITE_ONLY) ensures the password can be set from requests but not sent back in responses.
+    private String password;
+
+    // role - simple string; default "ROLE_USER" - Usefull if later we want to change funcionalities like you can vote like anonymus
+    @Column(nullable = false)
+    private String role = "ROLE_USER";
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Poll> createdPolls = new LinkedHashSet<>();
@@ -62,6 +73,12 @@ public class User {
     public String getEmail() {
         return email;
     }
+
+    public void setPassword(String password) { this.password = password; }
+    public String getPassword() { return password; }
+
+    public void setRole(String role) { this.role = role; }
+    public String getRole() { return role; }
 
     //Relational setters and getters
     public void setCreatedPolls(Set<Poll> createdPolls) {

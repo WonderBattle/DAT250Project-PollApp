@@ -47,6 +47,15 @@ dependencies {
     implementation("com.h2database:h2:2.3.232")
      */
 
+    // Spring Security (authentication/authorization)
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // JWT library (JJWT) - for generating and validating tokens
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5") // for JSON (claims) serialization
+
+
 }
 
 tasks.withType<Test> {
