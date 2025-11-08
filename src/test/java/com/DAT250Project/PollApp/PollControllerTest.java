@@ -1,23 +1,29 @@
 package com.DAT250Project.PollApp;
 
-import com.DAT250Project.PollApp.model.*;
-import com.DAT250Project.PollApp.repository.*;
+import com.DAT250Project.PollApp.model.Poll;
+import com.DAT250Project.PollApp.model.User;
+import com.DAT250Project.PollApp.model.VoteOption;
+import com.DAT250Project.PollApp.repository.PollRepository;
+import com.DAT250Project.PollApp.repository.UserRepository;
+import com.DAT250Project.PollApp.repository.VoteOptionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Integration tests for PollController (including options endpoints).

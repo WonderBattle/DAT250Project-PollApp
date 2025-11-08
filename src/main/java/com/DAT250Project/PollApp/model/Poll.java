@@ -12,6 +12,7 @@ import java.util.*;
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id"
 )
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Poll {
 
     @Id
@@ -28,7 +29,6 @@ public class Poll {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by", nullable = false)
-    @JsonIdentityReference(alwaysAsId = true)
     private User createdBy;
 
     @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

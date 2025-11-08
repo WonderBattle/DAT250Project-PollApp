@@ -12,6 +12,7 @@ import java.util.*;
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id"
 )
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Vote {
 
     @Id
@@ -22,12 +23,10 @@ public class Vote {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voter_id", nullable = false)
-    @JsonIdentityReference(alwaysAsId = true)
     private User voter;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "option_id", nullable = false)
-    @JsonIdentityReference(alwaysAsId = true)
     private VoteOption option;
 
     //CONSTRUCTORS
