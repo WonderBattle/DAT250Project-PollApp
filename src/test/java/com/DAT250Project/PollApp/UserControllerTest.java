@@ -20,6 +20,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import java.util.Map;
+
+
 /**
  * Integration tests for UserController.
  *
@@ -53,8 +57,10 @@ class UserControllerTest {
     private VoteOption redOption;
     private Vote vote;
 
+    private String jwtToken;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         // clean DB (defensive; transactional will rollback anyway)
         voteRepository.deleteAll();
         voteOptionRepository.deleteAll();
@@ -63,6 +69,7 @@ class UserControllerTest {
 
         // Create a user (Alice) and save to DB directly (setup only)
         alice = new User("alice", "alice@example.com");
+        alice.setPassword(new BCryptPasswordEncoder().encode("password123"));
         alice = userRepository.save(alice);
 
         // Create a poll for Alice and persist
@@ -80,6 +87,9 @@ class UserControllerTest {
         // Create a vote by Alice on the red option
         vote = new Vote(alice, redOption);
         vote = voteRepository.save(vote);
+
+        // Obtain token for Alice (used in tests that require authentication)
+        jwtToken = obtainAccessToken(alice.getEmail());
     }
 
     @Test
@@ -96,12 +106,17 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /users creates a new user")
     void createUser_createsUser() throws Exception {
-        User bob = new User("bob", "bob@example.com");
+        // Create a Map or DTO instead of User entity to avoid serialization issues
+        Map<String, String> userRequest = Map.of(
+                "username", "bob",
+                "email", "bob@example.com",
+                "password", "password123"
+        );
 
         // perform POST /users with JSON body
         String response = mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bob)))
+                        .content(objectMapper.writeValueAsString(userRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value("bob"))
                 .andReturn().getResponse().getContentAsString();
@@ -114,7 +129,8 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /users/{userId} returns the user")
     void getUserById_returnsUser() throws Exception {
-        mockMvc.perform(get("/users/{userId}", alice.getId()))
+        mockMvc.perform(get("/users/{userId}", alice.getId())
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("alice"))
                 .andExpect(jsonPath("$.email").value("alice@example.com"));
@@ -123,7 +139,8 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /users/{userId}/polls returns user's polls")
     void getUserPolls_returnsPolls() throws Exception {
-        mockMvc.perform(get("/users/{userId}/polls", alice.getId()))
+        mockMvc.perform(get("/users/{userId}/polls", alice.getId())
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].question").value("What's your favorite colour?"));
     }
@@ -131,7 +148,8 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /users/{userId}/votes returns user's votes")
     void getUserVotes_returnsVotes() throws Exception {
-        mockMvc.perform(get("/users/{userId}/votes", alice.getId()))
+        mockMvc.perform(get("/users/{userId}/votes", alice.getId())
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].voter.id").value(alice.getId().toString()));
@@ -140,10 +158,29 @@ class UserControllerTest {
     @Test
     @DisplayName("DELETE /users/{userId} deletes the user")
     void deleteUser_deletesUser() throws Exception {
-        mockMvc.perform(delete("/users/{userId}", alice.getId()))
+        mockMvc.perform(delete("/users/{userId}", alice.getId())
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isNoContent());
 
         // ensure user no longer exists in DB
         assertThat(userRepository.findById(alice.getId())).isEmpty();
     }
+
+    private String obtainAccessToken(String email) throws Exception {
+        Map<String, String> loginPayload = Map.of(
+                "email", email,
+                "password", "password123"
+        );
+
+        var mvcResult = mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginPayload)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        var json = mvcResult.getResponse().getContentAsString();
+        var node = objectMapper.readTree(json);
+        return node.get("token").asText();
+    }
+
 }

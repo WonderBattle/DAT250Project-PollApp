@@ -20,6 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import java.util.Map;
+
 /**
  * Integration tests for VoteController.
  *
@@ -51,8 +54,10 @@ class VoteControllerTest {
     private VoteOption blue;
     private Vote aliceVote;
 
+    private String jwtToken;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         // cleanup
         voteRepository.deleteAll();
         voteOptionRepository.deleteAll();
@@ -60,7 +65,9 @@ class VoteControllerTest {
         userRepository.deleteAll();
 
         // seed user
-        alice = userRepository.save(new User("alice", "alice@example.com"));
+        alice = new User("alice", "alice@example.com");
+        alice.setPassword(new BCryptPasswordEncoder().encode("password123"));
+        alice = userRepository.save(alice);
 
         // seed poll
         poll = new Poll();
@@ -76,7 +83,11 @@ class VoteControllerTest {
 
         // seed vote (Alice votes Red)
         aliceVote = voteRepository.save(new Vote(alice, red));
+
+        // Obtain JWT token for alice
+        jwtToken = obtainAccessToken(alice.getEmail());
     }
+
 
     @Test
     @DisplayName("POST /polls/{pollId}/votes creates a vote")
@@ -86,6 +97,7 @@ class VoteControllerTest {
         request.setOptionId(blue.getId());
 
         mockMvc.perform(post("/polls/{pollId}/votes", poll.getId())
+                        .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -96,7 +108,8 @@ class VoteControllerTest {
     @Test
     @DisplayName("GET /votes returns all votes")
     void getAllVotes_returnsVotes() throws Exception {
-        mockMvc.perform(get("/votes"))
+        mockMvc.perform(get("/votes")
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
     }
@@ -104,7 +117,8 @@ class VoteControllerTest {
     @Test
     @DisplayName("GET /{optionId}/votes returns votes for option")
     void getVotesByOption_returnsVotes() throws Exception {
-        mockMvc.perform(get("/{optionId}/votes", red.getId()))
+        mockMvc.perform(get("/{optionId}/votes", red.getId())
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
     }
@@ -112,7 +126,8 @@ class VoteControllerTest {
     @Test
     @DisplayName("GET /polls/{pollId}/votes returns votes for poll")
     void getVotesByPoll_returnsVotes() throws Exception {
-        mockMvc.perform(get("/polls/{pollId}/votes", poll.getId()))
+        mockMvc.perform(get("/polls/{pollId}/votes", poll.getId())
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
     }
@@ -120,7 +135,8 @@ class VoteControllerTest {
     @Test
     @DisplayName("GET /votes/{voteId} returns a vote")
     void getVoteById_returnsVote() throws Exception {
-        mockMvc.perform(get("/votes/{voteId}", aliceVote.getId()))
+        mockMvc.perform(get("/votes/{voteId}", aliceVote.getId())
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(aliceVote.getId().toString()));
     }
@@ -133,6 +149,7 @@ class VoteControllerTest {
         updateReq.setOptionId(blue.getId());
 
         mockMvc.perform(put("/polls/{pollId}/votes", poll.getId())
+                        .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateReq)))
                 .andExpect(status().isOk())
@@ -142,9 +159,28 @@ class VoteControllerTest {
     @Test
     @DisplayName("DELETE /votes/{voteId} deletes a vote")
     void deleteVote_deletesVote() throws Exception {
-        mockMvc.perform(delete("/votes/{voteId}", aliceVote.getId()))
+        mockMvc.perform(delete("/votes/{voteId}", aliceVote.getId())
+                        .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isNoContent());
 
         assertThat(voteRepository.findById(aliceVote.getId())).isEmpty();
     }
+
+    private String obtainAccessToken(String email) throws Exception {
+        Map<String, String> loginPayload = Map.of(
+                "email", email,
+                "password", "password123"
+        );
+
+        var mvcResult = mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginPayload)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        var json = mvcResult.getResponse().getContentAsString();
+        var node = objectMapper.readTree(json);
+        return node.get("token").asText();
+    }
+
 }

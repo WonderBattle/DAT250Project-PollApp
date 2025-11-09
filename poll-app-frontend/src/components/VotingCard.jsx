@@ -81,9 +81,9 @@ const VotingCard = ({poll}) => {
                 <div className="poll-header-text">
                     <h2 className="poll-question">{poll.question}</h2>
                     <p className="poll-meta">
-                        Created by <strong>{poll.createdBy}</strong> on{" "}
-                        {new Date(poll.publishedAt).toLocaleDateString()} | Valid until:{" "}
-                        {new Date(poll.validUntil).toLocaleDateString()}
+                        Created by <strong>{poll.createdBy?.username || "Unknown"}</strong> on{" "}
+                        {poll.publishedAt ? new Date(poll.publishedAt).toLocaleDateString() : "N/A"} | Valid until:{" "}
+                        {poll.validUntil ? new Date(poll.validUntil).toLocaleDateString() : "N/A"}
                     </p>
                 </div>
             </div>
