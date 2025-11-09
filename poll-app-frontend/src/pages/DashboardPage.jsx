@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PollCard from "../components/PollCard";
 import Header from "../components/Header";
+import CreatePollCard from "../components/CreatePollCard"
 import "../styles/Dashboard.css";
 import {deletePoll} from "../apiConfig/pollApi";
 import { getAllPolls } from "../apiConfig/pollApi";
@@ -21,6 +22,7 @@ import { getAllPolls } from "../apiConfig/pollApi";
 
 const Dashboard = () => {
     const [polls, setPolls] = useState([]);
+    const [showCreatePollCard, setShowCreatePollCard] = useState(false);
 
     useEffect(() => {
         const fetchPolls = async () => {
@@ -71,13 +73,29 @@ const Dashboard = () => {
             <Header />
             <main className="main-content">
                 <h1 className="page-title">Poll Dashboard</h1>
+
+                {!showCreatePollCard && (
+                    <div className="create-poll-container">
+                        <button
+                            className="create-poll-btn"
+                            onClick={() => setShowCreatePollCard(true)}
+                        >
+                            Create New Poll
+                        </button>
+                    </div>
+                )}
+
+                {showCreatePollCard && (
+                    <CreatePollCard onCancel={() => setShowCreatePollCard(false)} />
+                )}
+
                 {polls.length > 0 ? (
                     polls.map((poll) => (
                         <PollCard
                             key={poll.id}
                             poll={poll}
                             onDelete={handleDeletePoll}
-                            onVote  = {handleVoteClick}
+                            onVote={handleVoteClick}
                         />
                     ))
                 ) : (
