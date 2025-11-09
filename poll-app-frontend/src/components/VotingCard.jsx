@@ -1,6 +1,8 @@
 import React, {useState} from "react";
 import "../styles/VotingCard.css";
 import {Trash2} from "lucide-react";
+import {addOption, deleteOption} from "../apiConfig/pollApi";
+
 
 //----------------------------constants variables-------------------------------
 const VotingCard = ({poll}) => {
@@ -33,22 +35,9 @@ const VotingCard = ({poll}) => {
         if (options.some((o) => o.caption === trimmed)) return alert("Option already exists");
 
         try {
-            const response = await fetch(`http://localhost:8080/polls/${poll.id}/options`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    caption: trimmed,
-                    presentationOrder: options.length + 1
-                })
-            });
-
-            if (!response.ok) throw new Error();
-
-            const created = await response.json();
-
-            setOptions([...options, created]); // backend returns the true object
+            const created = await addOption(poll.id, { caption: trimmed, presentationOrder: options.length + 1 });
+            setOptions([...options, created]);
             setNewOption("");
-
         } catch (error) {
             console.error(error);
             alert("Failed to add option");
@@ -58,15 +47,13 @@ const VotingCard = ({poll}) => {
     //----------------------------deleting any vote option-------------------------------
     const handleDeleteOption = async (opt) => {
         try {
-            // if it's an existing option -> backend ID exists too
+            // delete from backend only if it exists in DB
             if (opt.id) {
-                await fetch(`http://localhost:8080/polls/${poll.id}/options/${opt.id}`, {
-                    method: "DELETE",
-                });
+                await deleteOption(poll.id, opt.id);
             }
 
             // remove from the UI
-            setOptions(options.filter((o) => o.id !== opt.id));
+            setOptions((prev) => prev.filter((o) => o.id !== opt.id));
 
         } catch (error) {
             console.error("Failed to delete option:", error);
