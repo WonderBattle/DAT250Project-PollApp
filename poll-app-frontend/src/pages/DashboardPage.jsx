@@ -23,6 +23,15 @@ import { getAllPolls } from "../apiConfig/pollApi";
 const Dashboard = () => {
     const [polls, setPolls] = useState([]);
     const [showCreatePollCard, setShowCreatePollCard] = useState(false);
+   //saving current logged in user
+    const [currentUser, setCurrentUser] = useState(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            setCurrentUser(JSON.parse(storedUser));
+        }
+    }, []);
 
     useEffect(() => {
         const fetchPolls = async () => {
@@ -85,8 +94,11 @@ const Dashboard = () => {
                     </div>
                 )}
 
-                {showCreatePollCard && (
-                    <CreatePollCard onCancel={() => setShowCreatePollCard(false)} />
+                {showCreatePollCard && currentUser && (
+                    <CreatePollCard
+                        onCancel={() => setShowCreatePollCard(false)}
+                        currentUser={currentUser}
+                    />
                 )}
 
                 {polls.length > 0 ? (

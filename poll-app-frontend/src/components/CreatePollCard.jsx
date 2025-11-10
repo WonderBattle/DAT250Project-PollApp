@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import "../styles/VotingCard.css";
 import { Trash2 } from "lucide-react";
+import {createPoll} from "../apiConfig/pollApi"
 
 //----------------------frontend without any backend yet--------------------
-const CreatePollCard = ({ onCancel, currentUser = "You" }) => {
+const CreatePollCard = ({ onCancel, currentUser }) => {
     const [question, setQuestion] = useState("");
     const [expirationDate, setExpirationDate] = useState("");
     const [options, setOptions] = useState([
@@ -32,9 +33,14 @@ const CreatePollCard = ({ onCancel, currentUser = "You" }) => {
     };
 
     //----------------------create poll button methods--------------------
-    const handleCreatePoll = () => {
+    const handleCreatePoll = async () => {
         if (!question.trim()) return alert("Please enter the poll question.");
         if (!expirationDate) return alert("Please select an expiration date.");
+
+        if (!currentUser || !currentUser.id) {
+            console.error("No currentUser passed to CreatePollCard!");
+            return <p>Loading user...</p>;
+        }
 
         // expiration date must be in the future
         if (new Date(expirationDate) <= new Date()) {
@@ -44,17 +50,30 @@ const CreatePollCard = ({ onCancel, currentUser = "You" }) => {
         if (options.some((opt) => !opt.caption.trim()))
             return alert("Please fill all option fields.");
 
-        const creationDate = new Date().toISOString();
-        const pollData = {
-            question,
-            createdBy: currentUser,
-            publishedAt: creationDate,
-            validUntil: expirationDate,
-            options,
-        };
+        try {
+            const payload = {
+                question,
+                validUntil: expirationDate + "T00:00:00Z", //instant format for backend
+                createdBy: {
+                    id: currentUser.id //passing UUID instead of name
+                },
+                options: options.map((o) => ({
+                    caption: o.caption
+                }))
+            };
 
-        console.log("Poll Data to Save:", pollData);
-        alert("Poll creation will be implemented later!");
+            console.log("Sending payload:", payload);
+
+            const savedPoll = await createPoll(payload);
+
+            console.log("Created Poll:", savedPoll);
+            alert("Poll successfully created!");
+
+            onCancel(); // close modal
+        } catch (error) {
+            console.error("Error creating poll:", error);
+            alert("Failed to create poll.");
+        }
     };
 
     return (
@@ -63,7 +82,7 @@ const CreatePollCard = ({ onCancel, currentUser = "You" }) => {
                 <div className="poll-header-text">
                     <h2 className="poll-question">Create a New Poll</h2>
                     <p className="poll-meta">
-                        Created by <strong>{currentUser}</strong> | Expiration Date:{" "}
+                        Created by <strong>{currentUser?.username}</strong>| Expiration Date:{" "}
                         {expirationDate ? new Date(expirationDate).toLocaleDateString() : "Not set"}
                     </p>
                 </div>
