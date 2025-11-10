@@ -1,5 +1,6 @@
 package com.DAT250Project.PollApp;
 
+import com.DAT250Project.PollApp.CacheConfig.RedisCacheService;
 import com.DAT250Project.PollApp.model.*;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,9 @@ public class PollManager {
     private VoteOptionRepository voteOptionRepository; // replaces Map<UUID, VoteOption> options
     @Autowired
     private VoteRepository voteRepository;           // replaces Map<UUID, Vote> votes
+
+    @Autowired
+    private RedisCacheService redisCacheService;
 
     // Constructor (optional) - Spring will handle dependency injection
     public PollManager() {}

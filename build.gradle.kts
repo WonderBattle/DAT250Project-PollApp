@@ -38,14 +38,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     runtimeOnly("com.h2database:h2")
 
-    /*
-    // anotations JPA
-    implementation("jakarta.persistence:jakarta.persistence-api:3.2.0")
-    // implementation JPA
-    implementation("org.hibernate.orm:hibernate-core:7.1.1.Final")
-    // driver BD
-    implementation("com.h2database:h2:2.3.232")
-     */
+    // Redis client (Lettuce)
+    implementation("io.lettuce:lettuce-core:6.3.2.RELEASE")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
 
 }
 
