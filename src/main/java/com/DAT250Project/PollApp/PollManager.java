@@ -1,5 +1,6 @@
 package com.DAT250Project.PollApp;
 
+import com.DAT250Project.PollApp.messaging.VotePublisher;
 import com.DAT250Project.PollApp.model.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -31,6 +32,8 @@ public class PollManager {
     private VoteOptionRepository voteOptionRepository; // replaces Map<UUID, VoteOption> options
     @Autowired
     private VoteRepository voteRepository;           // replaces Map<UUID, Vote> votes
+    @Autowired
+    private VotePublisher votePublisher;
 
     // ------ NEW : Security
     @Autowired
@@ -300,6 +303,8 @@ public class PollManager {
         // Add the vote to the option's vote set
         option.getVotes().add(savedVote);
         voteOptionRepository.save(option); // Update option to maintain consistency
+
+        votePublisher.publishVote(savedVote);
 
         return savedVote;
     }

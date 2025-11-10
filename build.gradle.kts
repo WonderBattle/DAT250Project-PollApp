@@ -33,6 +33,7 @@ dependencies {
     //Documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.6.0")
+    implementation ("org.springframework.boot:spring-boot-starter-amqp")
 
     //DataBase
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
