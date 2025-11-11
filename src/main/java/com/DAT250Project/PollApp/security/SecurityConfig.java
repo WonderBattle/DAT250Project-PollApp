@@ -5,6 +5,7 @@ package com.DAT250Project.PollApp.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -79,6 +80,13 @@ public class SecurityConfig {
 
                         // Allow user registration (POST /users)
                         .requestMatchers("/users").permitAll()
+
+                        .requestMatchers("/polls/public").permitAll()
+
+                        .requestMatchers("/polls/private/**").authenticated()
+
+                        //Allow anonymus votes
+                        .requestMatchers(HttpMethod.POST, "/polls/**").permitAll()
 
                         // Allow Swagger and API docs without needing to log in
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

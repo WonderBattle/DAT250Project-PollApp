@@ -27,6 +27,9 @@ public class Poll {
     @Column(nullable = false)
     private Instant validUntil;
 
+    @Column(nullable = false)
+    private boolean publicPoll = true; // true = public, false = private
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
@@ -92,6 +95,9 @@ public class Poll {
         return validUntil;
     }
 
+    public boolean isPublicPoll() { return publicPoll; }
+    public void setPublicPoll(boolean publicPoll) { this.publicPoll = publicPoll; }
+
     //Relationships setters and getters
     public void setCreatedBy(User createdBy) {
         this.createdBy = createdBy;
@@ -112,23 +118,12 @@ public class Poll {
     }
 
     //METHODS
-    //TODO choose between default constructor or parametrized constructor
+    //DONE choosen parametrized constructor
     public VoteOption addVoteOption(String caption) {
         int order = options.size()+1;            // <-- Determine presentationOrder
         VoteOption option = new VoteOption(caption, order, this);
         this.options.add(option);
         return option;
     }
-
-    /*
-    public VoteOption addVoteOption(String caption) {
-        VoteOption option = new VoteOption();
-        option.setCaption(caption);
-        option.setPresentationOrder(options.size());
-        option.setPoll(this);
-        this.options.add(option);
-        return option;
-    }
-    */
 
 }

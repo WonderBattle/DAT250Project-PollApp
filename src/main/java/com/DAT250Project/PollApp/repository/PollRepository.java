@@ -17,4 +17,10 @@ public interface PollRepository extends JpaRepository<Poll, UUID> {
 
     // Find expired polls
     List<Poll> findByValidUntilBefore(java.time.Instant currentTime);
+
+    // Find public polls
+    List<Poll> findByPublicPollTrue();
+
+    // Find private polls by user id
+    List<Poll> findByPublicPollFalseAndCreatedBy_Id(UUID userId);
 }

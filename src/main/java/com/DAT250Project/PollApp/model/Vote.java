@@ -22,7 +22,7 @@ public class Vote {
     private Instant publishedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "voter_id", nullable = false)
+    @JoinColumn(name = "voter_id", nullable = true)  // allow anonymous votes
     private User voter;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -165,6 +165,16 @@ public class PollManager {
         return pollRepository.findAll();
     }
 
+    // Get public polls
+    public List<Poll> getPublicPolls() {
+        return pollRepository.findByPublicPollTrue();
+    }
+
+    // Get private polls
+    public List<Poll> getPrivatePolls(UUID userId) {
+        return pollRepository.findByPublicPollFalseAndCreatedBy_Id(userId);
+    }
+
     // Get a poll by id
     public Poll getPollById(UUID pollId) {
         // Find a poll by ID from database, or null if not found
@@ -277,11 +287,18 @@ public class PollManager {
          */
         // Validate existence of poll, user and option from database
         Poll poll = pollRepository.findById(pollId).orElse(null);
-        User voter = userRepository.findById(voterId).orElse(null);
         VoteOption option = voteOptionRepository.findById(optionId).orElse(null);
 
-        if (poll == null || voter == null || option == null) {
-            return null; // any missing resource -> fail (controller will return 404 / 400)
+        if (poll == null || option == null) {
+            return null; // missing poll/option -> fail
+        }
+
+        User voter = null;
+        if (voterId != null) {
+            voter = userRepository.findById(voterId).orElse(null);
+            if (voter == null) {
+                return null; // invalid voter id provided
+            }
         }
 
         // Ensure the option actually belongs to the poll
@@ -295,19 +312,25 @@ public class PollManager {
         vote.setPublishedAt(Instant.now());      // record timestamp
 
         // Link vote to voter and option
-        vote.setVoter(voter);                   // set user reference
-        vote.setOption(option);                  // set chosen option
+        if (voter != null) {
+            vote.setVoter(voter);
+        } else {
+            vote.setVoter(null); // anonymous vote
+        }
+        vote.setOption(option);
 
         // Persist in database
         Vote savedVote = voteRepository.save(vote);
 
-        // Add the vote to the voter's vote set
-        voter.getVotes().add(savedVote);
-        userRepository.save(voter); // Update user to maintain consistency
+        // if voter present, add to their votes
+        if (voter != null) {
+            voter.getVotes().add(savedVote);
+            userRepository.save(voter);
+        }
 
-        // Add the vote to the option's vote set
+        // add the vote to the option's vote set
         option.getVotes().add(savedVote);
-        voteOptionRepository.save(option); // Update option to maintain consistency
+        voteOptionRepository.save(option);
 
         votePublisher.publishVote(savedVote);
 
@@ -435,5 +458,13 @@ public class PollManager {
             voteRepository.deleteById(voteId);
         }
         return vote;
+    }
+
+    public int countVotesPerOption(UUID optionId) {
+        VoteOption option = voteOptionRepository.findById(optionId).orElse(null);
+        if (option == null) {
+            return 0; 
+        }
+        return option.getVotes().size();
     }
 }
