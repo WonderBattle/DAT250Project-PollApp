@@ -481,7 +481,7 @@ public class PollManager {
         return voteRepository.findAll();
     }
 
-    // Get the votes for an option
+    // Get the votes for an option (no caching)
     public List<Vote> getVotesByOption(UUID optionId) {
         /*  Before DB
 
@@ -498,6 +498,11 @@ public class PollManager {
         /*  Before DB
 
          */
+        Object cachedVotes = redisCacheService.get("poll_votes", pollId, List.class);
+        if (cachedVotes instanceof List) {
+            return (List<Vote>) cachedVotes;
+        }
+
         Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return Collections.emptyList();
 
@@ -505,24 +510,40 @@ public class PollManager {
         for (VoteOption option : poll.getOptions()) {
             pollVotes.addAll(option.getVotes());
         }
+
+        redisCacheService.cachePollVotes(pollId, pollVotes);
         return pollVotes;
     }
 
-    // Get a vote by id
+    // Get a vote by id with caching
     public Vote getVoteById(UUID voteId) {
         /*  Before DB
 
          */
-        return voteRepository.findById(voteId).orElse(null);
+        Vote cachedVote = redisCacheService.get("vote", voteId, Vote.class);
+        if (cachedVote != null) {
+            return cachedVote;
+        }
+
+        Vote vote = voteRepository.findById(voteId).orElse(null);
+        if (vote != null) {
+            redisCacheService.cacheVote(voteId, vote);
+        }
+        return vote;
     }
 
-    // Delete vote by id
+    // Delete vote by id with cache cleanup
     public Vote deleteVoteById(UUID voteId) {
         /*  Before DB
 
          */
         Vote vote = voteRepository.findById(voteId).orElse(null);
         if (vote != null) {
+            UUID pollId = null;
+            if (vote.getOption() != null && vote.getOption().getPoll() != null) {
+                pollId = vote.getOption().getPoll().getId();
+            }
+
             // Remove from option's votes
             if (vote.getOption() != null) {
                 vote.getOption().getVotes().remove(vote);
@@ -535,7 +556,28 @@ public class PollManager {
             }
             // Delete the vote
             voteRepository.deleteById(voteId);
+
+            // Invalidate caches
+            redisCacheService.delete("vote", voteId);
+            if (pollId != null) {
+                redisCacheService.delete("poll_results", pollId);
+                redisCacheService.delete("poll_votes", pollId);
+            }
         }
         return vote;
+    }
+
+    // ------- Manual cache clearing methods ---------------------------------
+    // TODO not used but we can change manager to use them
+
+    public void clearPollCache(UUID pollId) {
+        redisCacheService.delete("poll", pollId);
+        redisCacheService.delete("poll_results", pollId);
+        redisCacheService.delete("poll_votes", pollId);
+    }
+
+    public void clearAllCache() {
+        redisCacheService.delete("all_polls", null);
+        redisCacheService.delete("all_users", null);
     }
 }
