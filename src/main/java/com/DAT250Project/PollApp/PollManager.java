@@ -1,5 +1,6 @@
 package com.DAT250Project.PollApp;
 
+import com.DAT250Project.PollApp.CacheConfig.RedisCacheService;
 import com.DAT250Project.PollApp.messaging.VotePublisher;
 import com.DAT250Project.PollApp.model.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +35,10 @@ public class PollManager {
     private VoteRepository voteRepository;           // replaces Map<UUID, Vote> votes
     @Autowired
     private VotePublisher votePublisher;
+
+    // Injects the Redis cache service for caching operations
+    @Autowired
+    private RedisCacheService redisCacheService;
 
     // ------ NEW : Security
     @Autowired
