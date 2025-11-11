@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PollCard from "../components/PollCard";
 import Header from "../components/Header";
+import CreatePollCard from "../components/CreatePollCard"
 import "../styles/Dashboard.css";
 import {deletePoll} from "../apiConfig/pollApi";
 import { getAllPolls } from "../apiConfig/pollApi";
@@ -21,14 +22,31 @@ import { getAllPolls } from "../apiConfig/pollApi";
 
 const Dashboard = () => {
     const [polls, setPolls] = useState([]);
+    const [showCreatePollCard, setShowCreatePollCard] = useState(false);
+   //saving current logged in user
+    const [currentUser, setCurrentUser] = useState(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            setCurrentUser(JSON.parse(storedUser));
+        }
+    }, []);
 
     useEffect(() => {
         const fetchPolls = async () => {
             try {
                 const data = await getAllPolls();
+
+                if (!data || data.length === 0) {
+                    console.warn("No polls found: The database is empty.");
+                } else {
+                    console.log(`Successfully fetched ${data.length} polls from backend.`);
+                }
+
                 setPolls(data);
             } catch (error) {
-                console.error("Failed to fetch polls:", error);
+                console.error("Error fetching polls from backend:", error.message || error);
             }
         };
         fetchPolls();
@@ -64,13 +82,32 @@ const Dashboard = () => {
             <Header />
             <main className="main-content">
                 <h1 className="page-title">Poll Dashboard</h1>
+
+                {!showCreatePollCard && (
+                    <div className="create-poll-container">
+                        <button
+                            className="create-poll-btn"
+                            onClick={() => setShowCreatePollCard(true)}
+                        >
+                            Create New Poll
+                        </button>
+                    </div>
+                )}
+
+                {showCreatePollCard && currentUser && (
+                    <CreatePollCard
+                        onCancel={() => setShowCreatePollCard(false)}
+                        currentUser={currentUser}
+                    />
+                )}
+
                 {polls.length > 0 ? (
                     polls.map((poll) => (
                         <PollCard
                             key={poll.id}
                             poll={poll}
                             onDelete={handleDeletePoll}
-                            onVote  = {handleVoteClick}
+                            onVote={handleVoteClick}
                         />
                     ))
                 ) : (

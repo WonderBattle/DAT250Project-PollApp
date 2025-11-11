@@ -29,3 +29,24 @@
     overflow: hidden;
     font-family: "Poppins", sans-serif;
 }
+
+/* --------------- create a new poll button ---------------- */
+.create-poll-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.create-poll-btn {
+    background: #6b4c7b;
+    color: white;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.create-poll-btn:hover {
+    transform: scale(1.05);
+}

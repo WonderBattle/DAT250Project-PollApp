@@ -23,7 +23,13 @@ export const deletePoll = async (pollId) => {
     await  axiosConfig(`/polls/${pollId}`);
 };
 
+//----------------add option----------------------
 export const addOption = async (pollId, optionData) => {
     const response = await axiosConfig.post(`/polls/${pollId}/options`, optionData);
     return response.data;
+};
+
+//----------------delete option----------------------
+export const deleteOption = async (pollId, optionId) => {
+    await axiosConfig.delete(`/polls/${pollId}/options/${optionId}`);
 };

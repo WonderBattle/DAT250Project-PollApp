@@ -1,11 +1,15 @@
 import React, {useState} from "react";
 import "../styles/VotingCard.css";
 import {Trash2} from "lucide-react";
+import {addOption, deleteOption} from "../apiConfig/pollApi";
+
 
 //----------------------------constants variables-------------------------------
 const VotingCard = ({poll}) => {
     const [selectedOption, setSelectedOption] = useState(null);
-    const [options, setOptions] = useState(poll.options || []);
+    const [options, setOptions] = useState(
+        poll.options ? poll.options.map((o) => ({ ...o, votes: o.votes || [] })) : []
+    );
     const [newOption, setNewOption] = useState("");
     const [editMode, setEditMode] = useState(false);
 
@@ -25,17 +29,36 @@ const VotingCard = ({poll}) => {
     };
 
     //----------------------------adding a new vote option-------------------------------
-    const handleAddOption = () => {
+    const handleAddOption = async () => {
         const trimmed = newOption.trim();
         if (!trimmed) return alert("Option cannot be empty");
-        if (options.includes(trimmed)) return alert("Option already exists");
-        setOptions([...options, trimmed]);
-        setNewOption("");
+        if (options.some((o) => o.caption === trimmed)) return alert("Option already exists");
+
+        try {
+            const created = await addOption(poll.id, { caption: trimmed, presentationOrder: options.length + 1 });
+            setOptions([...options, created]);
+            setNewOption("");
+        } catch (error) {
+            console.error(error);
+            alert("Failed to add option");
+        }
     };
 
     //----------------------------deleting any vote option-------------------------------
-    const handleDeleteOption = (opt) => {
-        setOptions(options.filter((o) => o !== opt));
+    const handleDeleteOption = async (opt) => {
+        try {
+            // delete from backend only if it exists in DB
+            if (opt.id) {
+                await deleteOption(poll.id, opt.id);
+            }
+
+            // remove from the UI
+            setOptions((prev) => prev.filter((o) => o.id !== opt.id));
+
+        } catch (error) {
+            console.error("Failed to delete option:", error);
+            alert("Error deleting option");
+        }
     };
 
     //----------------------------returning html-------------------------------
@@ -45,9 +68,9 @@ const VotingCard = ({poll}) => {
                 <div className="poll-header-text">
                     <h2 className="poll-question">{poll.question}</h2>
                     <p className="poll-meta">
-                        Created by <strong>{poll.createdBy}</strong> on{" "}
-                        {new Date(poll.publishedAt).toLocaleDateString()} | Valid until:{" "}
-                        {new Date(poll.validUntil).toLocaleDateString()}
+                        Created by <strong>{poll.createdBy?.username || "Unknown"}</strong> on{" "}
+                        {poll.publishedAt ? new Date(poll.publishedAt).toLocaleDateString() : "N/A"} | Valid until:{" "}
+                        {poll.validUntil ? new Date(poll.validUntil).toLocaleDateString() : "N/A"}
                     </p>
                 </div>
             </div>
@@ -59,14 +82,14 @@ const VotingCard = ({poll}) => {
                             <input
                                 type="radio"
                                 name={`poll-${poll.id}`}
-                                value={opt.text}
-                                checked={selectedOption === opt.text}
-                                onChange={() => setSelectedOption(opt.text)}
+                                value={opt.caption}
+                                checked={selectedOption === opt.caption}
+                                onChange={() => setSelectedOption(opt.caption)}
                                 disabled={editMode}
                             />
                             <span>
-  {opt.text} ({opt.votes} votes)
-</span>
+      {opt.caption} ({opt.votes ? opt.votes.length : 0} votes)
+    </span>
                             {editMode && (
                                 <Trash2
                                     size={18}

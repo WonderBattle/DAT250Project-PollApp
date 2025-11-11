@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/LoginForm.css";
+import { login } from "../apiConfig/authApi";
 
 const LoginForm = ({ onSwitch }) => {
     const [email, setEmail] = useState("");
@@ -8,6 +9,7 @@ const LoginForm = ({ onSwitch }) => {
     const navigate = useNavigate();
 
     //------------------ Handle Login ------------------
+    /*
     const handleLogin = () => {
         if (email.trim() === "" || password.trim() === "") {
             alert("Please enter both email and password");
@@ -18,6 +20,30 @@ const LoginForm = ({ onSwitch }) => {
         localStorage.setItem("user", JSON.stringify({ email }));
         console.log("Login successful:", email);
         navigate("/dashboard");
+    };
+     */
+
+    const handleLogin = async () => {
+        if (email.trim() === "" || password.trim() === "") {
+            alert("Please enter both email and password");
+            return;
+        }
+
+        try {
+            // Call the backend login endpoint (AuthController /auth/login)
+            const response = await login(email, password); // from authApi.js
+            const { token, user } = response.data;
+
+            // Save the token and user info locally
+            localStorage.setItem("token", token);
+            localStorage.setItem("user", JSON.stringify(user));
+
+            console.log("Login successful:", user);
+            navigate("/dashboard");
+        } catch (err) {
+            console.error("Login failed", err);
+            alert("Invalid credentials or server error");
+        }
     };
 
     //------------------ HTML to visualize ------------------

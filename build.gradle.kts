@@ -33,6 +33,7 @@ dependencies {
     //Documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-api:2.6.0")
+    implementation ("org.springframework.boot:spring-boot-starter-amqp")
 
     //DataBase
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -43,9 +44,28 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-cache")
 
+    // Spring Security (authentication/authorization)
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // JWT library (JJWT) - for generating and validating tokens
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5") // for JSON (claims) serialization
+
+
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+    // Force tests to always run
+    outputs.upToDateWhen { false }
 }
 

@@ -1,7 +1,8 @@
 package com.DAT250Project.PollApp;
 
-import com.DAT250Project.PollApp.CacheConfig.RedisCacheService;
+import com.DAT250Project.PollApp.messaging.VotePublisher;
 import com.DAT250Project.PollApp.model.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -31,9 +32,12 @@ public class PollManager {
     private VoteOptionRepository voteOptionRepository; // replaces Map<UUID, VoteOption> options
     @Autowired
     private VoteRepository voteRepository;           // replaces Map<UUID, Vote> votes
-
     @Autowired
-    private RedisCacheService redisCacheService;
+    private VotePublisher votePublisher;
+
+    // ------ NEW : Security
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // Constructor (optional) - Spring will handle dependency injection
     public PollManager() {}
@@ -42,8 +46,10 @@ public class PollManager {
 
     // Create user
     public User createUser(User user) {
-        // No need to generate ID manually - JPA will handle it with @GeneratedValue
-        // Store the user in database using repository
+        // If password provided, hash it before saving
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         return userRepository.save(user);
     }
 
@@ -119,16 +125,30 @@ public class PollManager {
         }
 
         // Save the poll in the database - this will cascade to options
-        Poll savedPoll = pollRepository.save(poll);
+        //Poll savedPoll = pollRepository.save(poll);
 
         // Set presentation order for options
+        /*
         int order = 1;
         if (savedPoll.getOptions() != null) {
             for (VoteOption option : savedPoll.getOptions()) {
                 option.setPresentationOrder(order++);
+                option.setPoll(savedPoll); //trying to fix error while creating a poll
                 // Options will be saved automatically because cascade is configured on Poll entity
             }
         }
+
+         */
+
+        if (poll.getOptions() != null) {
+            int order = 1;
+            for (VoteOption option : poll.getOptions()) {
+                option.setPresentationOrder(order++);
+                option.setPoll(poll);  // ⭐ Set poll reference BEFORE saving poll
+            }
+        }
+
+        Poll savedPoll = pollRepository.save(poll);
 
         // Return the new poll
         return savedPoll;
@@ -283,6 +303,8 @@ public class PollManager {
         // Add the vote to the option's vote set
         option.getVotes().add(savedVote);
         voteOptionRepository.save(option); // Update option to maintain consistency
+
+        votePublisher.publishVote(savedVote);
 
         return savedVote;
     }
