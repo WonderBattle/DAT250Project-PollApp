@@ -263,9 +263,6 @@ public class PollManager {
 
     // Add an option to a poll with cache invalidation
     public VoteOption addOptionToPoll(UUID pollId, VoteOption option) {
-        /*  Before DB
-
-         */
         // Find the target poll from database
         Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return null;
