@@ -49,46 +49,85 @@ public class PollManager {
 
     //------------------------------------------------ USER ------------------------------------------------------------
 
-    // Create user
+    // Create user with password encoding and cache invalidation
     public User createUser(User user) {
         // If password provided, hash it before saving
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
+
+        // Invalidate users cache after creation
+        redisCacheService.delete("all_users", null);
+
         return userRepository.save(user);
     }
 
-    // Get all users
+    // Get all users with cache-first strategy
     public List<User> getAllUsers() {
-        // Return a list containing all user objects from database
-        return userRepository.findAll();
+        // Try to get from cache first
+        Object cachedUsers = redisCacheService.getAllUsers();
+        if (cachedUsers instanceof List) {
+            return (List<User>) cachedUsers;
+        }
+
+        // If not in cache, get from database and cache it
+        List<User> users = userRepository.findAll();
+        redisCacheService.cacheAllUsers(users);
+        return users;
     }
 
-    // Get a user by id
+    // Get a user by id with cache-first strategy
     public User getUserById(UUID userId) {
-        // Retrieve a user by ID from database, or null if not found
-        return userRepository.findById(userId).orElse(null);
+        // Try to get from cache first using type-safe method
+        User cachedUser = redisCacheService.get("user", userId, User.class);
+        // If found in cache, return immediately (cache hit)
+        if (cachedUser != null) {
+            return cachedUser;
+        }
+
+        // If not in cache, search in database (cache miss)
+        User user = userRepository.findById(userId).orElse(null);
+        // If user found in database
+        if (user != null) {
+            // Save to cache for future queries (cache population)
+            redisCacheService.cacheUser(userId, user);
+        }
+        return user;
     }
 
-    // Delete a user by id
+    // Delete a user by id with cache cleanup
     public User deleteUserById(UUID userId) {
         // Find user first to return it, then delete from database
         User user = userRepository.findById(userId).orElse(null);
         if (user != null) {
             userRepository.deleteById(userId);
+            // Invalidate all related caches
+            redisCacheService.delete("user", userId);
+            redisCacheService.delete("all_users", null);
+            redisCacheService.delete("user_polls", userId);
         }
         return user;
     }
 
-    // Get polls of a user
+    // Get user's polls with caching
     public List<Poll> getPollsByUser(UUID userId) {
+        // Try cache first
+        Object cachedPolls = redisCacheService.getUserPolls(userId);
+        if (cachedPolls instanceof List) {
+            return (List<Poll>) cachedPolls;
+        }
+
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return null;
+
+        List<Poll> polls = new ArrayList<>(user.getCreatedPolls());
+        // Cache the result
+        redisCacheService.cacheUserPolls(userId, polls);
         // Convert the Set<Poll> to List<Poll> because controller methods return a List<>, not a Set<>
         return new ArrayList<>(user.getCreatedPolls());
     }
 
-    //Get votes of a user
+    //Get votes of a user (no caching - votes change frequently)
     public List<Vote> getVotesByUser(UUID userId) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) return null;
@@ -98,7 +137,7 @@ public class PollManager {
 
     //------------------------------------------------- POLL -----------------------------------------------------------
 
-    // Create a poll
+    // Create a poll and handles cache invalidation
     public Poll createPoll(Poll poll) {
         // No need to assign ID manually - JPA will handle it with @GeneratedValue
 
@@ -155,14 +194,28 @@ public class PollManager {
 
         Poll savedPoll = pollRepository.save(poll);
 
+        // Invalidate relevant cache
+        redisCacheService.delete("all_polls", null); // Clean complete list
+        redisCacheService.delete("user_polls", savedPoll.getCreatedBy().getId());
+
         // Return the new poll
         return savedPoll;
     }
 
-    // Get all polls
+    // Get all polls  with cache-first strategy
     public List<Poll> getAllPolls() {
-        // Return all polls as a list from database
-        return pollRepository.findAll();
+        // Get all polls from cache (uses simple key "all_polls")
+        Object cached = redisCacheService.getAllPolls();
+        // Check if cached object is a List and return it
+        if (cached instanceof List) {
+            return (List<Poll>) cached;
+        }
+
+        // If not in cache, get from database
+        List<Poll> polls = pollRepository.findAll();
+        // Cache the complete list
+        redisCacheService.cacheAllPolls(polls);
+        return polls;
     }
 
     // Get public polls
@@ -176,9 +229,22 @@ public class PollManager {
     }
 
     // Get a poll by id
+    // Retrieves a poll by ID with cache-first strategy
     public Poll getPollById(UUID pollId) {
-        // Find a poll by ID from database, or null if not found
-        return pollRepository.findById(pollId).orElse(null);
+        // Try to get poll from cache
+        Poll cachedPoll = redisCacheService.get("poll", pollId, Poll.class);
+        // Return cached poll if found
+        if (cachedPoll != null) {
+            return cachedPoll;
+        }
+
+        // If not in cache, query database
+        Poll poll = pollRepository.findById(pollId).orElse(null);
+        // If poll found, cache it
+        if (poll != null) {
+            redisCacheService.cachePoll(pollId, poll);
+        }
+        return poll;
     }
 
     // Delete a poll by id
@@ -190,17 +256,24 @@ public class PollManager {
         // If found, delete from database - cascading will handle related options
         // todo revise cascade problems
         if (poll != null) {
+            // Get creator ID before deletion for cache invalidation
+            UUID creatorId = poll.getCreatedBy().getId();
+
+            // Invalidate all related caches
+            redisCacheService.delete("poll", pollId);
+            redisCacheService.delete("all_polls", null);
+            redisCacheService.delete("user_polls", creatorId);
+            redisCacheService.delete("poll_results", pollId);
+            redisCacheService.delete("poll_votes", pollId);
+
             pollRepository.deleteById(pollId);
         }
 
         return poll;
     }
 
-    // Add an option to a poll
+    // Add an option to a poll with cache invalidation
     public VoteOption addOptionToPoll(UUID pollId, VoteOption option) {
-        /*  Before DB
-
-         */
         // Find the target poll from database
         Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return null;
@@ -218,20 +291,29 @@ public class PollManager {
         // Update the poll to maintain consistency
         pollRepository.save(poll);
 
+        // Invalidate caches since poll structure changed
+        redisCacheService.delete("poll", pollId);
+        redisCacheService.delete("poll_results", pollId);
+
         return savedOption;
     }
 
-    //Delete an option from a poll
+    //Delete an option from a poll with cache invalidation
     public VoteOption deleteOptionById(UUID optionId){
         VoteOption voteOption = voteOptionRepository.findById(optionId).orElse(null);
 
         if (voteOption != null){
+            UUID pollId = voteOption.getPoll().getId();
             voteOptionRepository.deleteById(optionId);
+
+            redisCacheService.delete("poll", pollId);
+            redisCacheService.delete("poll_results", pollId);
+            redisCacheService.delete("option", optionId);
         }
         return voteOption;
     }
 
-    // Get all options of a poll
+    // Get all options of a poll (no caching - part of poll entity)
     public List<VoteOption> getAllOptionsByPoll(UUID pollId) {
         /*  Before DB
 
@@ -247,7 +329,15 @@ public class PollManager {
         /*  Before DB
 
          */
+        VoteOption cachedOption = redisCacheService.get("option", optionId, VoteOption.class);
+        if (cachedOption != null) {
+            return cachedOption;
+        }
+
         VoteOption voteOption = voteOptionRepository.findById(optionId).orElse(null);
+        if (voteOption != null) {
+            redisCacheService.cacheVoteOption(optionId, voteOption);
+        }
         return voteOption;
     }
 
@@ -280,7 +370,7 @@ public class PollManager {
     }
     */
 
-    // Create a new Vote for a given pollId, voterId and optionId
+    // Create a new Vote for a given pollId, voterId and optionId and handles cache invalidation for affected data
     public Vote createVote(UUID pollId, UUID voterId, UUID optionId) {
         /*  Before DB
 
@@ -334,10 +424,15 @@ public class PollManager {
 
         votePublisher.publishVote(savedVote);
 
+        // Invalidate affected caches
+        redisCacheService.delete("poll_results", pollId);
+        redisCacheService.delete("poll_votes", pollId);
+        redisCacheService.delete("poll", pollId);
+
         return savedVote;
     }
 
-    // Update a user's vote in a poll: change their chosen option to newOptionId
+    // Update a user's vote in a poll: change their chosen option to newOptionId with cache invalidation
     public Vote updateVote(UUID pollId, UUID voterId, UUID newOptionId) {
         /*  Before DB
 
@@ -391,10 +486,15 @@ public class PollManager {
         Vote updatedVote = voteRepository.save(existingVote);
         voteOptionRepository.save(newOption);
 
+        // Invalidate caches
+        redisCacheService.delete("poll_results", pollId);
+        redisCacheService.delete("poll_votes", pollId);
+
+
         return updatedVote;
     }
 
-    // Get all votes
+    // Get all votes (no caching - frequently changing)
     public List<Vote> getAllVotes() {
         /*  Before DB
 
@@ -402,7 +502,7 @@ public class PollManager {
         return voteRepository.findAll();
     }
 
-    // Get the votes for an option
+    // Get the votes for an option (no caching)
     public List<Vote> getVotesByOption(UUID optionId) {
         /*  Before DB
 
@@ -419,6 +519,11 @@ public class PollManager {
         /*  Before DB
 
          */
+        Object cachedVotes = redisCacheService.get("poll_votes", pollId, List.class);
+        if (cachedVotes instanceof List) {
+            return (List<Vote>) cachedVotes;
+        }
+
         Poll poll = pollRepository.findById(pollId).orElse(null);
         if (poll == null) return Collections.emptyList();
 
@@ -426,24 +531,40 @@ public class PollManager {
         for (VoteOption option : poll.getOptions()) {
             pollVotes.addAll(option.getVotes());
         }
+
+        redisCacheService.cachePollVotes(pollId, pollVotes);
         return pollVotes;
     }
 
-    // Get a vote by id
+    // Get a vote by id with caching
     public Vote getVoteById(UUID voteId) {
         /*  Before DB
 
          */
-        return voteRepository.findById(voteId).orElse(null);
+        Vote cachedVote = redisCacheService.get("vote", voteId, Vote.class);
+        if (cachedVote != null) {
+            return cachedVote;
+        }
+
+        Vote vote = voteRepository.findById(voteId).orElse(null);
+        if (vote != null) {
+            redisCacheService.cacheVote(voteId, vote);
+        }
+        return vote;
     }
 
-    // Delete vote by id
+    // Delete vote by id with cache cleanup
     public Vote deleteVoteById(UUID voteId) {
         /*  Before DB
 
          */
         Vote vote = voteRepository.findById(voteId).orElse(null);
         if (vote != null) {
+            UUID pollId = null;
+            if (vote.getOption() != null && vote.getOption().getPoll() != null) {
+                pollId = vote.getOption().getPoll().getId();
+            }
+
             // Remove from option's votes
             if (vote.getOption() != null) {
                 vote.getOption().getVotes().remove(vote);
@@ -456,6 +577,13 @@ public class PollManager {
             }
             // Delete the vote
             voteRepository.deleteById(voteId);
+
+            // Invalidate caches
+            redisCacheService.delete("vote", voteId);
+            if (pollId != null) {
+                redisCacheService.delete("poll_results", pollId);
+                redisCacheService.delete("poll_votes", pollId);
+            }
         }
         return vote;
     }
@@ -463,8 +591,22 @@ public class PollManager {
     public int countVotesPerOption(UUID optionId) {
         VoteOption option = voteOptionRepository.findById(optionId).orElse(null);
         if (option == null) {
-            return 0; 
+            return 0;
         }
         return option.getVotes().size();
+    }
+
+    // ------- Manual cache clearing methods ---------------------------------
+    // TODO not used but we can change manager to use them
+
+    public void clearPollCache(UUID pollId) {
+        redisCacheService.delete("poll", pollId);
+        redisCacheService.delete("poll_results", pollId);
+        redisCacheService.delete("poll_votes", pollId);
+    }
+
+    public void clearAllCache() {
+        redisCacheService.delete("all_polls", null);
+        redisCacheService.delete("all_users", null);
     }
 }
