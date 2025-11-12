@@ -20,7 +20,7 @@ export  const  getPollById = async (pollId) => {
 
 //----------------deleting a poll----------------------
 export const deletePoll = async (pollId) => {
-    await  axiosConfig(`/polls/${pollId}`);
+    await  axiosConfig.delete(`/polls/${pollId}`);
 };
 
 //----------------add option----------------------
@@ -32,4 +32,16 @@ export const addOption = async (pollId, optionData) => {
 //----------------delete option----------------------
 export const deleteOption = async (pollId, optionId) => {
     await axiosConfig.delete(`/polls/${pollId}/options/${optionId}`);
+};
+
+//----------getting poll by ID (only private)---------------
+export  const  getPrivatePollById = async (pollId) => {
+    const  response = await  axiosConfig.get(`/polls/private/${pollId}`);
+    return response.data;
+};
+
+//----------getting poll by ID (only private)---------------
+export  const  getPublicPollById = async (pollId) => {
+    const  response = await  axiosConfig.get(`/polls/public/${pollId}`);
+    return response.data;
 };

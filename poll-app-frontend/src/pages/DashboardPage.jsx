@@ -3,8 +3,7 @@ import PollCard from "../components/PollCard";
 import Header from "../components/Header";
 import CreatePollCard from "../components/CreatePollCard"
 import "../styles/Dashboard.css";
-import {deletePoll} from "../apiConfig/pollApi";
-import { getAllPolls } from "../apiConfig/pollApi";
+import {deletePoll, getPrivatePollById} from "../apiConfig/pollApi";
 
 
 //------------------sample poll data just for visual testing------------------
@@ -35,13 +34,15 @@ const Dashboard = () => {
 
     useEffect(() => {
         const fetchPolls = async () => {
+            if (!currentUser) return; // Wait until user is loaded
+
             try {
-                const data = await getAllPolls();
+                const data = await getPrivatePollById(currentUser.id);
 
                 if (!data || data.length === 0) {
-                    console.warn("No polls found: The database is empty.");
+                    console.warn("No polls found for this user.");
                 } else {
-                    console.log(`Successfully fetched ${data.length} polls from backend.`);
+                    console.log(`Fetched ${data.length} private polls for user ${currentUser.username}`);
                 }
 
                 setPolls(data);
@@ -50,7 +51,7 @@ const Dashboard = () => {
             }
         };
         fetchPolls();
-    }, []);
+    }, [currentUser]);
 
     //--------------------simulate loading polls--------------------
     /*useEffect(() => {
