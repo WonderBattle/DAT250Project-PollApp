@@ -7,8 +7,12 @@ export const getAllPolls = async () => {
 };
 
 //--------------creating a new poll ------------
-export const  createPoll = async (pollDate) => {
-    const  response = await axiosConfig.post("/polls", pollDate);
+export const createPoll = async (payload, token) => {
+    const response = await axiosConfig.post("/polls", payload, {
+        headers: {
+            Authorization: token ? `Bearer ${token}` : undefined
+        }
+    });
     return response.data;
 };
 

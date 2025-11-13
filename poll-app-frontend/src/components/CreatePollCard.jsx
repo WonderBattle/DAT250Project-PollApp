@@ -11,6 +11,7 @@ const CreatePollCard = ({ onCancel, currentUser }) => {
         { id: 1, caption: "" },
         { id: 2, caption: "" },
     ]);
+    const [isPublicPoll, setIsPublicPoll] = useState(true);
 
     const today = new Date();
     today.setDate(today.getDate() + 1);
@@ -53,18 +54,15 @@ const CreatePollCard = ({ onCancel, currentUser }) => {
         try {
             const payload = {
                 question,
-                validUntil: expirationDate + "T00:00:00Z", //instant format for backend
-                createdBy: {
-                    id: currentUser.id //passing UUID instead of name
-                },
-                options: options.map((o) => ({
-                    caption: o.caption
-                }))
+                validUntil: new Date(expirationDate).toISOString(),
+                publicPoll: isPublicPoll,
+                createdBy: { id: currentUser.id }, // must exist
+                options: options.map(o => ({ caption: o.caption }))
             };
 
             console.log("Sending payload:", payload);
 
-            const savedPoll = await createPoll(payload);
+            const savedPoll = await createPoll(payload, currentUser?.token);
 
             console.log("Created Poll:", savedPoll);
             alert("Poll successfully created!");
@@ -143,6 +141,29 @@ const CreatePollCard = ({ onCancel, currentUser }) => {
                     <button className="add-option-btn" onClick={handleAddOption}>
                         Add Option
                     </button>
+                </div>
+                <label className="font-bold mb-2 block mt-4">Poll Visibility</label>
+                <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+                    <label>
+                        <input
+                            type="radio"
+                            name="pollVisibility"
+                            value="public"
+                            checked={isPublicPoll === true}
+                            onChange={() => setIsPublicPoll(true)}
+                        />
+                        Public Poll
+                    </label>
+                    <label>
+                        <input
+                            type="radio"
+                            name="pollVisibility"
+                            value="private"
+                            checked={isPublicPoll === false}
+                            onChange={() => setIsPublicPoll(false)}
+                        />
+                        Private Poll
+                    </label>
                 </div>
 
                 <div className="poll-buttons">

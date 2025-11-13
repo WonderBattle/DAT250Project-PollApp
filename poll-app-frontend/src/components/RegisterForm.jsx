@@ -32,8 +32,15 @@ const RegisterForm = ({onSwitch}) => {
 
         try {
             // Call backend register endpoint
-            await register(username, email, password);
-            console.log("Registered user:", { username, email });
+            //await register(username, email, password);
+            //console.log("Registered user:", { username, email });
+            const response = await register(username, email, password);
+            const createdUser = response.data; // this contains the backend-assigned UUID
+
+            // Save the full user in localStorage
+            localStorage.setItem("user", JSON.stringify(createdUser));
+
+            console.log("Registered user:", createdUser);
             alert("Registration successful! Please log in.");
             onSwitch(); // switch back to login form
         } catch (error) {
