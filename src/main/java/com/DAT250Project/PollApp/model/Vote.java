@@ -8,10 +8,6 @@ import java.util.*;
 
 @Entity
 @Table(name = "votes")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Vote {
 
@@ -23,10 +19,12 @@ public class Vote {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voter_id", nullable = true)  // allow anonymous votes
+    @JsonIgnoreProperties({"votes", "createdPolls"}) // Ignore User's collections
     private User voter;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "option_id", nullable = false)
+    @JsonIgnoreProperties({"votes", "poll"}) // Break cycles
     private VoteOption option;
 
     //CONSTRUCTORS

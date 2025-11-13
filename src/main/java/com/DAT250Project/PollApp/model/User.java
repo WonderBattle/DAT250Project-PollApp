@@ -8,10 +8,6 @@ import java.util.*;
 @Entity
 @Table(name = "users")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
 public class User {
 
     @Id
@@ -37,9 +33,11 @@ public class User {
     private String role = "ROLE_USER";
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // Completely ignore this collection in JSON
     private Set<Poll> createdPolls = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "voter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // Completely ignore this collection
     private Set<Vote> votes = new LinkedHashSet<>();
 
     //CONSTRUCTORS

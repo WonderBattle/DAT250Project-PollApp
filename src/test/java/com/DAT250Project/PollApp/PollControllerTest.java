@@ -59,6 +59,7 @@ class PollControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+
         // Clean DB
         voteOptionRepository.deleteAll();
         pollRepository.deleteAll();
@@ -177,6 +178,31 @@ class PollControllerTest {
                 .andExpect(status().isNoContent());
 
         assertThat(pollRepository.findById(poll.getId())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("GET /polls/public returns public polls without auth")
+    void getPublicPolls_returnsPublicPollsWithoutAuth() throws Exception {
+        // Make poll public
+        poll.setPublicPoll(true);
+        pollRepository.save(poll);
+
+        mockMvc.perform(get("/polls/public"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.question=='Which is best?')]").exists());
+    }
+
+    @Test
+    @DisplayName("GET /polls/private/{userId} returns user's private polls")
+    void getPrivatePolls_returnsPrivatePolls() throws Exception {
+        // Make poll private
+        poll.setPublicPoll(false);
+        pollRepository.save(poll);
+
+        mockMvc.perform(get("/polls/private/{userId}", alice.getId())
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.question=='Which is best?')]").exists());
     }
 
 

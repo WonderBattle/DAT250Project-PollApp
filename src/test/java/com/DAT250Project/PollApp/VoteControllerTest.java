@@ -166,6 +166,26 @@ class VoteControllerTest {
         assertThat(voteRepository.findById(aliceVote.getId())).isEmpty();
     }
 
+    @Test
+    @DisplayName("POST /votes allows anonymous votes without authentication")
+    void createVote_anonymousUserCanVote() throws Exception {
+        // Get any option from the seeded poll
+        VoteOption option = voteOptionRepository.findAll().get(0);
+
+        // Create vote request with null voter (anonymous)
+        Map<String, Object> voteRequest = Map.of(
+                "optionId", option.getId().toString()
+                // No voterId = anonymous vote
+        );
+
+        mockMvc.perform(post("/votes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(voteRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.optionId").value(option.getId().toString()))
+                .andExpect(jsonPath("$.voterId").doesNotExist()); // Should be null for anonymous
+    }
+
     private String obtainAccessToken(String email) throws Exception {
         Map<String, String> loginPayload = Map.of(
                 "email", email,

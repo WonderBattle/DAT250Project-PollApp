@@ -7,10 +7,6 @@ import java.util.*;
 
 @Entity
 @Table(name = "vote_options")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class VoteOption {
 
@@ -26,9 +22,11 @@ public class VoteOption {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "poll_id", nullable = false)
+    @JsonIgnoreProperties("options") // Break cycle
     private Poll poll;
 
     @OneToMany(mappedBy = "option", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("option") // Break cycle
     private Set<Vote> votes = new LinkedHashSet<>();
 
     //CONSTRUCTORS

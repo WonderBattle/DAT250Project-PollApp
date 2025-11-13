@@ -75,26 +75,12 @@ public class SecurityConfig {
 
                 // Define which requests are allowed without authentication
                 .authorizeHttpRequests(auth -> auth
-                        // Allow anyone to access the authentication endpoints (login/register)
-                        .requestMatchers("/auth/**").permitAll()
-
-                        // Allow user registration (POST /users)
-                        .requestMatchers("/users").permitAll()
-
-                        .requestMatchers("/polls/public").permitAll()
-
-                        .requestMatchers("/polls/private/**").authenticated()
-
-                        //Allow anonymus votes
-                        .requestMatchers(HttpMethod.POST, "/polls/**").permitAll()
-
-                        // Allow Swagger and API docs without needing to log in
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-
-                        // Allow H2 console for development
-                        .requestMatchers("/h2-console/**").permitAll()
-
-                        // Any other endpoint (like /polls, /votes, etc.) requires authentication
+                        // Allow anonymous access to these endpoints
+                        .requestMatchers("/auth/**", "/polls/public", "/polls/{pollId}/options").permitAll()
+                        .requestMatchers("/votes", "/votes/**").permitAll() // Allow anonymous votes
+                        .requestMatchers("/users", "/users/**").permitAll() // Allow user registration without auth
+                        // Protect other endpoints
+                        .requestMatchers("/polls", "/polls/**").authenticated()
                         .anyRequest().authenticated()
                 )
 

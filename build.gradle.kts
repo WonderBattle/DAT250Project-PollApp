@@ -45,6 +45,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation ("io.lettuce:lettuce-core:6.4.2.RELEASE") // or newer
 
+    implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+
     // Spring Security (authentication/authorization)
     implementation("org.springframework.boot:spring-boot-starter-security")
 

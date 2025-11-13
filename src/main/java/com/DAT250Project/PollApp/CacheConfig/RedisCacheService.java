@@ -2,8 +2,14 @@
 package com.DAT250Project.PollApp.CacheConfig;
 
 // Spring framework imports
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.stereotype.Service;
 
 // Java utility imports
@@ -17,6 +23,7 @@ public class RedisCacheService {
     // Automatically injects the RedisTemplate configured in RedisConfig
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
 
     // === MÉTODOS GENÉRICOS CON UUID ===
 
@@ -66,6 +73,9 @@ public class RedisCacheService {
 
     // Helper method to build consistent Redis keys
     private String buildKey(String keyPrefix, UUID id) {
+        if (id == null) {
+            return keyPrefix; // Return just prefix for null IDs (like "all_polls")
+        }
         // Creates key in format: "prefix:uuid"
         return keyPrefix + ":" + id.toString();
     }
