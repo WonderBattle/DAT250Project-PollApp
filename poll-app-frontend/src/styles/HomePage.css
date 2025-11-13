@@ -12,3 +12,28 @@
     overflow: hidden;
     font-family: "Poppins", sans-serif;
 }
+
+/* --------------- public dashboard button ---------------- */
+.public-polls-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.public-polls-btn {
+    background: #ffb6c1;
+    color: white;
+    font-family: "Gasoek One", sans-serif;
+    font-size: 18px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.public-polls-btn:hover {
+    background: #ff9bb0;
+    transform: translateY(-2px);
+}
