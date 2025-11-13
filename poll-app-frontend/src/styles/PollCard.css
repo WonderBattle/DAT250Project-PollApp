@@ -1,30 +1,34 @@
 /*------------poll container card------------*/
 .poll-card {
     background: #ffffff;
-    border-radius: 20px;
-    padding: 16px 24px;
-    margin: 20px auto;
-    width: 800px;
-    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 1rem auto;
+    width: 90%;
+    max-width: 700px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    position: relative;
     font-family: "Poppins", sans-serif;
     color: #5a4d6a;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/*------------poll header above everything------------*/
+.poll-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15);
+}
+
+/*------------poll header------------*/
 .poll-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: pointer;
-    user-select: none;
 }
 
 .poll-header-text {
     flex: 1;
 }
 
-/*------------question should be visible even in folded state------------*/
 .poll-question {
     font-family: "GasoekOne-Regular", sans-serif;
     font-size: 24px;
@@ -37,86 +41,64 @@
     color: #8a7b96;
 }
 
-.poll-arrow {
-    color: #6b4c7b;
-    transition: transform 0.3s ease;
+/*------------expired label------------*/
+.expired-label {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #ff9b9b;
+    color: white;
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
-/*------------poll details should be visible after unfolding card------------*/
-.poll-body {
-    margin-top: 20px;
-    border-top: 1px solid #f3e8f0;
-    padding-top: 16px;
-    animation: fadeIn 0.3s ease;
+/*------------expired card styling------------*/
+.poll-card.expired {
+    opacity: 0.8;
+    background: #f8f5f5;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/*------------poll options------------*/
-.poll-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.poll-option {
-    background: #f3e8f0;
-    border-radius: 10px;
-    padding: 10px 15px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.poll-option:hover {
-    background: #ffdee9;
-}
-
-/*------------buttons like edit, vote, delete------------*/
+/*------------buttons------------*/
 .poll-buttons {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     gap: 10px;
+    margin-top: 1rem;
 }
 
-button {
-    font-family: "GasoekOne-Regular", sans-serif;
+.vote-btn,
+.delete-btn {
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 10px 20px;
-    color: white;
+    font-size: 16px;
     cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-button:hover {
-    transform: scale(1.05);
+    transition: all 0.2s ease;
+    font-family: "Poppins", sans-serif;
+    color: white;
 }
 
 .vote-btn {
     background: #ffb6c1;
 }
 
-.edit-btn {
-    background: #a48cc8;
+.vote-btn:hover {
+    background: #ff9bb0;
+}
+
+.vote-btn.disabled {
+    background: #ccc;
+    cursor: not-allowed;
 }
 
 .delete-btn {
-    background: #d46a6a;
+    background: #c8a2c8;
 }
 
-.poll-footer {
-    text-align: right;
-    margin-top: 15px;
-    font-size: 16px;
-    color: #6b4c7b;
+.delete-btn:hover {
+    background: #b185b6;
 }

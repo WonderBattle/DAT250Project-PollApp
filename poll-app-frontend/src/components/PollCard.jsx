@@ -6,6 +6,8 @@ import {useNavigate} from "react-router-dom";
 const PollCard = ({ poll, onDelete }) => {
 
     const navigate = useNavigate();
+    const isExpired = !poll.validUntil || new Date(poll.validUntil) < new Date() || !poll.options || poll.options.length === 0;
+
     //-------------------delete whole poll -----------------
     const handleDeletePoll = () => {
         if (window.confirm("Are you sure you want to delete this poll?")) {
@@ -15,11 +17,13 @@ const PollCard = ({ poll, onDelete }) => {
 
     //-------------------vote button click -----------------
     const handleVoteClick = () => {
-        navigate(`/vote/${poll.id}`);
+        if (!isExpired) {
+            navigate(`/vote/${poll.id}`);
+        }
     };
 
     return (
-        <div className="poll-card">
+        <div className={`poll-card ${isExpired ? "expired" : ""}`}>
             <div className="poll-header">
                 <div className="poll-header-text">
                     <h2 className="poll-question">{poll.question}</h2>
@@ -28,11 +32,17 @@ const PollCard = ({ poll, onDelete }) => {
                         {poll.validUntil ? new Date(poll.validUntil).toLocaleDateString() : "N/A"}
                     </p>
                 </div>
+
+                {isExpired && <span className="expired-label">Closed</span>}
             </div>
 
             <div className="poll-buttons">
-                <button className="vote-btn" onClick={handleVoteClick}>
-                    Let's Vote
+                <button
+                    className={`vote-btn ${isExpired ? "disabled" : ""}`}
+                    onClick={handleVoteClick}
+                    disabled={isExpired}
+                >
+                    {isExpired ? "Voting Closed" : "Let's Vote"}
                 </button>
                 <button className="delete-btn" onClick={handleDeletePoll}>
                     <Trash2 size={16} /> Delete
