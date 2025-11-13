@@ -24,6 +24,7 @@ const Dashboard = () => {
     const [showCreatePollCard, setShowCreatePollCard] = useState(false);
    //saving current logged in user
     const [currentUser, setCurrentUser] = useState(null);
+    const [showActiveOnly, setShowActiveOnly] = useState(true);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -76,13 +77,32 @@ const Dashboard = () => {
         console.log("Redirect to vote page for poll:", pollId);
         // later we should use navigate(`/poll/${pollId}`);
     };
-
+    //-------------------toggle switch for active or expired listing -------------------
+    const filteredPolls = polls.filter((poll) => {
+        const now = new Date();
+        const validUntil = new Date(poll.validUntil);
+        const isActive = validUntil > now;
+        return showActiveOnly ? isActive : !isActive;
+    });
     //-------------------html return------------------------------
     return (
         <div className="desktop-1">
             <Header />
             <main className="main-content">
                 <h1 className="page-title">Poll Dashboard</h1>
+
+                <div className="toggle-container">
+                    <span className={!showActiveOnly ? "inactive" : ""}>Expired</span>
+                    <label className="switch">
+                        <input
+                            type="checkbox"
+                            checked={showActiveOnly}
+                            onChange={() => setShowActiveOnly(!showActiveOnly)}
+                        />
+                        <span className="slider"></span>
+                    </label>
+                    <span className={showActiveOnly ? "active" : ""}>Active</span>
+                </div>
 
                 {!showCreatePollCard && (
                     <div className="create-poll-container">
@@ -102,8 +122,8 @@ const Dashboard = () => {
                     />
                 )}
 
-                {polls.length > 0 ? (
-                    polls.map((poll) => (
+                {filteredPolls.length > 0 ? (
+                    filteredPolls.map((poll) => (
                         <PollCard
                             key={poll.id}
                             poll={poll}
@@ -112,7 +132,7 @@ const Dashboard = () => {
                         />
                     ))
                 ) : (
-                    <p>Loading polls...</p>
+                    <p>No {showActiveOnly ? "active" : "expired"} polls found.</p>
                 )}
             </main>
         </div>
