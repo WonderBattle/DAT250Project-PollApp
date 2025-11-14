@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
-import PollCard from "../components/PollCard";
+import PublicPollCard from "../components/PublicPollCard";
 import Header from "../components/Header";
 import "../styles/Dashboard.css";
-import {useNavigate} from "react-router-dom";
-import { getPublicPollById } from "../apiConfig/pollApi";
+import { useNavigate } from "react-router-dom";
+import { getAllPublicPolls } from "../apiConfig/pollApi";
 
 const PublicDashboardPage = () => {
     const [polls, setPolls] = useState([]);
     const [showActiveOnly, setShowActiveOnly] = useState(true);
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchPolls = async () => {
             try {
-                const data = await getPublicPollById();
+                const data = await getAllPublicPolls();
                 setPolls(data);
             } catch (error) {
                 console.error("Error fetching public polls:", error.message || error);
@@ -36,7 +36,7 @@ const PublicDashboardPage = () => {
     //-------------------vote click-------------------
     const handleVoteClick = (pollId) => {
         // For public polls, everyone can vote
-        window.location.href = `/vote/${pollId}`;
+        window.location.href = `/vote/public/${pollId}`;
     };
 
     return (
@@ -62,7 +62,7 @@ const PublicDashboardPage = () => {
 
                 {filteredPolls.length > 0 ? (
                     filteredPolls.map((poll) => (
-                        <PollCard
+                        <PublicPollCard
                             key={poll.id}
                             poll={poll}
                             onVote={handleVoteClick}

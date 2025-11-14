@@ -61,3 +61,8 @@ export const getPollResults = async (pollId) => {
     const response = await axiosConfig.get(`/polls/${pollId}/results`);
     return response.data; // returns { optionId: voteCount }
 };
+
+export const getAllPublicPolls = async () => {
+    const response = await axiosConfig.get("/polls/public");
+    return response.data;
+};
