@@ -29,7 +29,6 @@ jobs:
           --health-retries 5
         ports:
           - 5672:5672
-          - 15672:15672
         env:
           RABBITMQ_DEFAULT_USER: guest
           RABBITMQ_DEFAULT_PASS: guest
@@ -47,14 +46,15 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Wait for RabbitMQ to be ready
+      - name: Wait for services to be ready
         run: |
-          timeout 30s bash -c '
-            until docker exec ${{ job.services.rabbitmq }} rabbitmq-diagnostics -q ping; do
-              echo "Waiting for RabbitMQ..."
-              sleep 2
-            done
-          '
+          # Wait for Redis
+          timeout 30s bash -c 'until nc -z localhost 6379; do echo "Waiting for Redis..."; sleep 2; done'
+          echo "Redis is ready!"
+          
+          # Wait for RabbitMQ
+          timeout 30s bash -c 'until nc -z localhost 5672; do echo "Waiting for RabbitMQ..."; sleep 2; done'
+          echo "RabbitMQ is ready!"
 
       - name: Run tests
         run: ./gradlew test -Dspring.profiles.active=test
