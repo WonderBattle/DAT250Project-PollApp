@@ -8,8 +8,8 @@ const PublicPollCard = ({ poll, onVote }) => {
 
     // -------------------vote button-----------------
     const handleVoteClick = () => {
-        if (!isExpired && onVote) {
-            onVote(poll.id);
+        if (!isExpired) {
+            navigate(`/vote/public/${poll.id}`);
         }
     };
 
