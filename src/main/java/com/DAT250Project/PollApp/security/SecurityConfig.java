@@ -71,14 +71,19 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // Allow the H2 database console to work (frames are blocked by default)
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                //.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
+
 
                 // Define which requests are allowed without authentication
                 .authorizeHttpRequests(auth -> auth
                         // Allow anonymous access to these endpoints
-                        .requestMatchers("/auth/**", "/polls/public", "/polls/{pollId}/options").permitAll()
-                        .requestMatchers("/votes", "/votes/**").permitAll() // Allow anonymous votes
-                        .requestMatchers("/users", "/users/**").permitAll() // Allow user registration without auth
+                        .requestMatchers("/auth/**", "/polls/public", "/polls/*/options").permitAll()
+                        .requestMatchers("/auth/login", "/auth/**").permitAll()
+                        .requestMatchers("/polls/*/votes").permitAll() // Allow anonymous votes
+                        .requestMatchers("/users", "/users/**").permitAll()
+                        // Swagger UI
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         // Protect other endpoints
                         .requestMatchers("/polls", "/polls/**").authenticated()
                         .anyRequest().authenticated()
@@ -108,12 +113,14 @@ public class SecurityConfig {
 
         // The request headers the frontend is allowed to send
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        //configuration.setAllowedHeaders(List.of("*"));
 
         // Headers that the backend can expose to the frontend (optional)
         configuration.setExposedHeaders(List.of("Authorization"));
 
         // Credentials (cookies) are not needed for JWT, so we set false
         configuration.setAllowCredentials(false);
+        //configuration.setAllowCredentials(true);
 
         // Register this configuration for all paths in the app
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

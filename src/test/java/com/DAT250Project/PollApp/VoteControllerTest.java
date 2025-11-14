@@ -101,7 +101,7 @@ class VoteControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.option").value(blue.getId().toString())) // Changed this line
+                .andExpect(jsonPath("$.optionId").value(blue.getId().toString()))
                 .andExpect(jsonPath("$.voter.id").value(alice.getId().toString()));
     }
 
@@ -153,7 +153,7 @@ class VoteControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateReq)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.option").value(blue.getId().toString())); // Changed this line
+                .andExpect(jsonPath("$.optionId").value(blue.getId().toString())); // Changed this line
     }
 
     @Test
@@ -167,9 +167,8 @@ class VoteControllerTest {
     }
 
     @Test
-    @DisplayName("POST /votes allows anonymous votes without authentication")
+    @DisplayName("POST /polls/{pollId}/votes allows anonymous votes without authentication")
     void createVote_anonymousUserCanVote() throws Exception {
-        // Get any option from the seeded poll
         VoteOption option = voteOptionRepository.findAll().get(0);
 
         // Create vote request with null voter (anonymous)
@@ -178,12 +177,12 @@ class VoteControllerTest {
                 // No voterId = anonymous vote
         );
 
-        mockMvc.perform(post("/votes")
+        mockMvc.perform(post("/polls/{pollId}/votes", poll.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(voteRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.optionId").value(option.getId().toString()))
-                .andExpect(jsonPath("$.voterId").doesNotExist()); // Should be null for anonymous
+                .andExpect(jsonPath("$.voter").doesNotExist()); // Should be null for anonymous
     }
 
     private String obtainAccessToken(String email) throws Exception {

@@ -9,8 +9,7 @@ import java.util.*;
 @Entity
 @Table(name = "vote_options")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class VoteOption implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class VoteOption {
 
     @Id
     @GeneratedValue
