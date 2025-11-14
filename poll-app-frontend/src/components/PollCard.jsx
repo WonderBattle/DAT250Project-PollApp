@@ -3,7 +3,7 @@ import "../styles/PollCard.css";
 import { Trash2 } from "lucide-react";
 import {useNavigate} from "react-router-dom";
 
-const PollCard = ({ poll, onDelete }) => {
+const PollCard = ({ poll, onDelete, currentUser}) => {
 
     const navigate = useNavigate();
     const isExpired = !poll.validUntil || new Date(poll.validUntil) < new Date() || !poll.options || poll.options.length === 0;
@@ -44,9 +44,11 @@ const PollCard = ({ poll, onDelete }) => {
                 >
                     {isExpired ? "Voting Closed" : "Let's Vote"}
                 </button>
-                <button className="delete-btn" onClick={handleDeletePoll}>
-                    <Trash2 size={16} /> Delete
-                </button>
+                {currentUser?.id === poll.createdBy?.id && (
+                    <button className="delete-btn" onClick={handleDeletePoll}>
+                        <Trash2 size={16} /> Delete
+                    </button>
+                )}
             </div>
 
         </div>

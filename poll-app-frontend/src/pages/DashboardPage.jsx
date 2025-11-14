@@ -129,6 +129,7 @@ const Dashboard = () => {
                             poll={poll}
                             onDelete={handleDeletePoll}
                             onVote={handleVoteClick}
+                            currentUser={currentUser}
                         />
                     ))
                 ) : (
