@@ -3,13 +3,15 @@ package com.DAT250Project.PollApp.model;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.*;
 
 @Entity
 @Table(name = "votes")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class Vote {
+public class Vote implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue

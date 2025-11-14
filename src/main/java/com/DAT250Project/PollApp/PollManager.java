@@ -1,10 +1,11 @@
 package com.DAT250Project.PollApp;
 
 import com.DAT250Project.PollApp.CacheConfig.RedisCacheService;
+import com.DAT250Project.PollApp.messaging.PollPublisher;
+import com.DAT250Project.PollApp.messaging.UserPublisher;
 import com.DAT250Project.PollApp.messaging.VotePublisher;
 import com.DAT250Project.PollApp.model.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -12,14 +13,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 
-import com.DAT250Project.PollApp.model.*;
 import com.DAT250Project.PollApp.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
 
 @Service
 public class PollManager {
@@ -34,13 +29,16 @@ public class PollManager {
     @Autowired
     private VoteRepository voteRepository;           // replaces Map<UUID, Vote> votes
     @Autowired
+    private UserPublisher userPublisher;
+    @Autowired
+    private PollPublisher pollPublisher;
+    @Autowired
     private VotePublisher votePublisher;
 
     // Injects the Redis cache service for caching operations
     @Autowired
     private RedisCacheService redisCacheService;
 
-    // ------ NEW : Security
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -58,8 +56,11 @@ public class PollManager {
 
         // Invalidate users cache after creation
         redisCacheService.delete("all_users", null);
+        User saved = userRepository.save(user);
 
-        return userRepository.save(user);
+        userPublisher.publishUserCreated(saved);
+
+        return saved;
     }
 
     // Get all users with cache-first strategy
@@ -193,6 +194,9 @@ public class PollManager {
         }
 
         Poll savedPoll = pollRepository.save(poll);
+        //debug check, and I think security blocks rabbit right now, probably this is why we do not see the messages in the console
+        System.out.println("Creating poll...");
+        pollPublisher.publishPollCreated(savedPoll);
 
         // Invalidate relevant cache
         redisCacheService.delete("all_polls", null); // Clean complete list

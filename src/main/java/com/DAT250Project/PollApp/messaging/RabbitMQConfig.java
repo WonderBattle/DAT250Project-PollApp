@@ -7,20 +7,59 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    // Use a fanout exchange so all subscribers get the message
+    public static final String EXCHANGE = "app.exchange";
+
+    // routing keys
+    public static final String USER_CREATED_KEY = "user.created";
+    public static final String POLL_CREATED_KEY = "poll.created";
+    public static final String VOTE_CREATED_KEY = "vote.created";
+
+    // queue names (matching ConsoleConsumer)
+    public static final String USER_CREATED_QUEUE = "user.created.queue";
+    public static final String POLL_CREATED_QUEUE = "poll.created.queue";
+    public static final String VOTE_CREATED_QUEUE = "vote.created.queue";
+
     @Bean
-    public FanoutExchange pollExchange() {
-        return new FanoutExchange("pollExchange");
+    public TopicExchange appExchange() {
+        return new TopicExchange(EXCHANGE);
     }
 
-    // later make unique for each poll if needed but I don't think so
     @Bean
-    public Queue defaultQueue() {
-        return new Queue("defaultPollQueue", true);
+    public Queue userCreatedQueue() {
+        return new Queue(USER_CREATED_QUEUE, true);
     }
 
     @Bean
-    public Binding binding(Queue defaultQueue, FanoutExchange pollExchange) {
-        return BindingBuilder.bind(defaultQueue).to(pollExchange);
+    public Queue pollCreatedQueue() {
+        return new Queue(POLL_CREATED_QUEUE, true);
+    }
+
+    @Bean
+    public Queue voteCreatedQueue() {
+        return new Queue(VOTE_CREATED_QUEUE, true);
+    }
+
+    @Bean
+    public Binding bindUserCreated() {
+        return BindingBuilder
+                .bind(userCreatedQueue())
+                .to(appExchange())
+                .with(USER_CREATED_KEY);
+    }
+
+    @Bean
+    public Binding bindPollCreated() {
+        return BindingBuilder
+                .bind(pollCreatedQueue())
+                .to(appExchange())
+                .with(POLL_CREATED_KEY);
+    }
+
+    @Bean
+    public Binding bindVoteCreated() {
+        return BindingBuilder
+                .bind(voteCreatedQueue())
+                .to(appExchange())
+                .with(VOTE_CREATED_KEY);
     }
 }
