@@ -49,3 +49,15 @@ export  const  getPublicPollById = async (pollId) => {
     const  response = await  axiosConfig.get(`/polls/public/${pollId}`);
     return response.data;
 };
+
+// ------------------ create a vote ------------------
+export const createVoteApi = async (pollId, voteData) => {
+    const response = await axiosConfig.post(`/polls/${pollId}/votes`, voteData);
+    return response.data;
+};
+
+// ------------------ get poll results ------------------
+export const getPollResults = async (pollId) => {
+    const response = await axiosConfig.get(`/polls/${pollId}/results`);
+    return response.data; // returns { optionId: voteCount }
+};

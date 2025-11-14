@@ -36,6 +36,10 @@ public class VoteController {
             return ResponseEntity.badRequest().build(); // invalid relationship  BAD REQUEST = 400
         }
         Vote createdVote = pollManager.createVote(pollId, voteRequest.getVoterId(), voteRequest.getOptionId());
+        //only one vote per poll per user
+        if (createdVote == null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // 409 USER ALREADY VOTED
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(createdVote);
     }
 

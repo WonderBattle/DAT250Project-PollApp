@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 //PollController — manages polls and their options.
@@ -128,6 +129,16 @@ public class PollController {
             return ResponseEntity.notFound().build();  //NOT FOUND = 404
         }
         return ResponseEntity.ok(pollManager.getAllOptionsByPoll(pollId)); // OK = 200
+    }
+    // GET /polls/{pollId}/results so counting the votes
+    @Operation(summary = "Get vote counts per option", description = "Returns vote counts for each option in a poll")
+    @GetMapping("/{pollId}/results")
+    public ResponseEntity<Map<UUID, Long>> getPollResults(@PathVariable UUID pollId) {
+        Poll poll = pollManager.getPollById(pollId);
+        if (poll == null) return ResponseEntity.notFound().build();
+
+        Map<UUID, Long> results = pollManager.countVotesForPoll(pollId);
+        return ResponseEntity.ok(results);
     }
 
 }

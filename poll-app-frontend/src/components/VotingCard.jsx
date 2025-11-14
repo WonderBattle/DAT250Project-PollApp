@@ -1,22 +1,79 @@
-import React, {useState} from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/VotingCard.css";
-import {Trash2} from "lucide-react";
-import {addOption, deleteOption} from "../apiConfig/pollApi";
+import { Trash2 } from "lucide-react";
+import { addOption, deleteOption, createVoteApi } from "../apiConfig/pollApi";
+import { getPollResults } from "../apiConfig/pollApi";
 
 
-//----------------------------constants variables-------------------------------
-const VotingCard = ({poll}) => {
-    const [selectedOption, setSelectedOption] = useState(null);
+const VotingCard = ({ poll }) => {
+    //----------------------------constants variables-------------------------------
+    const loggedUser = JSON.parse(localStorage.getItem("user"));
+    const [selectedOptionId, setSelectedOptionId] = useState(null);
     const [options, setOptions] = useState(
         poll.options ? poll.options.map((o) => ({ ...o, votes: o.votes || [] })) : []
     );
     const [newOption, setNewOption] = useState("");
     const [editMode, setEditMode] = useState(false);
+    const [alreadyVoted, setAlreadyVoted] = useState(false);
+
+    // ----------------check if the user already voted ----------------
+    useEffect(() => {
+        if (!loggedUser) return;
+
+        const userId = loggedUser.id;
+
+        const hasVoted = poll.options.some((opt) =>
+            opt.votes?.some((v) => v.voterId === userId)
+        );
+
+        setAlreadyVoted(hasVoted);
+    }, [poll, loggedUser]);
+
+    useEffect(() => {
+        const fetchVoteCounts = async () => {
+            try {
+                const results = await getPollResults(poll.id); // {optionId: voteCount}
+                setOptions((prevOptions) =>
+                    prevOptions.map((opt) => ({
+                        ...opt,
+                        votesCount: results[opt.id] || 0, // update votes count
+                    }))
+                );
+            } catch (err) {
+                console.error("Failed to fetch vote counts:", err);
+            }
+        };
+        fetchVoteCounts();
+    }, [poll.id]);
 
     //----------------------------voting-------------------------------
-    const handleVote = () => {
-        if (!selectedOption) return alert("Please select an option!");
-        alert(`You voted for: ${selectedOption}`);
+    const handleVote = async () => {
+        if (!selectedOptionId) return alert("Please select an option!");
+
+        try {
+            await createVoteApi(poll.id, {
+                voterId: loggedUser?.id || null,
+                optionId: selectedOptionId,
+            });
+
+            alert("Vote submitted!");
+            setAlreadyVoted(true);
+
+            const results = await getPollResults(poll.id);
+            setOptions((prevOptions) =>
+                prevOptions.map((opt) => ({
+                    ...opt,
+                    votesCount: results[opt.id] || 0,
+                }))
+            );
+        } catch (err) {
+            if (err.response?.status === 409) {
+                alert("You already voted in this poll.");
+                setAlreadyVoted(true);
+            } else {
+                alert("Voting failed");
+            }
+        }
     };
 
     //----------------------------edit mode for editing vote options-------------------------------
@@ -32,11 +89,15 @@ const VotingCard = ({poll}) => {
     const handleAddOption = async () => {
         const trimmed = newOption.trim();
         if (!trimmed) return alert("Option cannot be empty");
-        if (options.some((o) => o.caption === trimmed)) return alert("Option already exists");
+        if (options.some((o) => o.caption === trimmed))
+            return alert("Option already exists");
 
         try {
-            const created = await addOption(poll.id, { caption: trimmed, presentationOrder: options.length + 1 });
-            setOptions([...options, created]);
+            const created = await addOption(poll.id, {
+                caption: trimmed,
+                presentationOrder: options.length + 1
+            });
+            setOptions([...options, { ...created, votesCount: 0 }]);
             setNewOption("");
         } catch (error) {
             console.error(error);
@@ -73,23 +134,26 @@ const VotingCard = ({poll}) => {
                         {poll.validUntil ? new Date(poll.validUntil).toLocaleDateString() : "N/A"}
                     </p>
                 </div>
+
+                {alreadyVoted && (
+                    <span className="expired-label">You already voted</span>
+                )}
             </div>
 
             <div className="poll-body">
                 <div className="poll-options">
-                    {options.map((opt, idx) => (
-                        <label key={idx} className="poll-option">
+                    {options.map((opt) => (
+                        <label key={opt.id} className="poll-option">
                             <input
                                 type="radio"
                                 name={`poll-${poll.id}`}
-                                value={opt.caption}
-                                checked={selectedOption === opt.caption}
-                                onChange={() => setSelectedOption(opt.caption)}
-                                disabled={editMode}
+                                checked={selectedOptionId === opt.id}
+                                onChange={() => setSelectedOptionId(opt.id)}
+                                disabled={editMode || alreadyVoted}
                             />
                             <span>
-      {opt.caption} ({opt.votes ? opt.votes.length : 0} votes)
-    </span>
+                               {opt.caption} ({opt.votesCount} votes)
+                            </span>
                             {editMode && (
                                 <Trash2
                                     size={18}
@@ -119,9 +183,11 @@ const VotingCard = ({poll}) => {
                 <div className="poll-buttons">
                     {!editMode ? (
                         <>
-                            <button className="vote-btn" onClick={handleVote}>
-                                Vote
-                            </button>
+                            {!alreadyVoted && (
+                                <button className="vote-btn" onClick={handleVote}>
+                                    Vote
+                                </button>
+                            )}
                             <button className="edit-btn" onClick={handleEdit}>
                                 Edit Vote
                             </button>

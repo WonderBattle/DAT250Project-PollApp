@@ -395,6 +395,11 @@ public class PollManager {
             }
         }
 
+        //user is already voted in this poll
+        if (voter != null && voteRepository.existsByVoter_IdAndOptionPoll_Id(voterId, pollId)) {
+            return null;
+        }
+
         // Ensure the option actually belongs to the poll
         if (option.getPoll() == null || !pollId.equals(option.getPoll().getId())) {
             return null; // invalid relationship - controller should treat as bad request
@@ -591,13 +596,17 @@ public class PollManager {
         }
         return vote;
     }
+    //counting votes
+    public Map<UUID, Long> countVotesForPoll(UUID pollId) {
+        List<VoteOption> options = voteOptionRepository.findByPollId(pollId);
 
-    public int countVotesPerOption(UUID optionId) {
-        VoteOption option = voteOptionRepository.findById(optionId).orElse(null);
-        if (option == null) {
-            return 0;
+        Map<UUID, Long> votesPerOption = new HashMap<>();
+        for (VoteOption option : options) {
+            long count = voteRepository.countByOption_Id(option.getId());
+            votesPerOption.put(option.getId(), count);
         }
-        return option.getVotes().size();
+
+        return votesPerOption;
     }
 
     // ------- Manual cache clearing methods ---------------------------------

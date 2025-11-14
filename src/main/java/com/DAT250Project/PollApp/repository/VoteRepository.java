@@ -24,4 +24,7 @@ public interface VoteRepository extends JpaRepository<Vote, UUID> {
 
     // Check if user has voted in a specific poll
     boolean existsByVoter_IdAndOptionPoll_Id(UUID voterId, UUID pollId);
+
+    // Count votes for an option
+    long countByOption_Id(UUID optionId);
 }
