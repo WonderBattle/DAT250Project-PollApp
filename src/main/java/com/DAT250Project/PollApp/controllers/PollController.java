@@ -43,16 +43,26 @@ public class PollController {
     }
 
     // Get all public polls (visible to everyone)
+    @Operation(summary = "Get public polls", description = "Returns a list of all the public polls")
     @GetMapping("/public")
     public ResponseEntity<List<Poll>> getPublicPolls() {
         return ResponseEntity.ok(pollManager.getPublicPolls());
     }
 
     // Get all private polls of a specific user
+    @Operation(summary = "Get private polls of an user", description = "Returns a list of all the privates polls from an user")
     @GetMapping("/private/{userId}")
     public ResponseEntity<List<Poll>> getPrivatePolls(@PathVariable UUID userId) {
         return ResponseEntity.ok(pollManager.getPrivatePolls(userId));
     }
+
+    // Get all polls from an user
+    @Operation(summary = "Get private and public polls of an user", description = "Returns a list of all the polls from an user")
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Poll>> getUserPolls(@PathVariable UUID userId) {
+        return ResponseEntity.ok(pollManager.getPollsByUser(userId));
+    }
+
 
     //Get poll by id
     @Operation(summary = "Get a poll", description = "Get a poll by its ID")

@@ -86,6 +86,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         // Protect other endpoints
                         .requestMatchers("/polls", "/polls/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/polls/user/{userId}").authenticated() // We'll handle authorization in service layer
                         .anyRequest().authenticated()
                 )
 
