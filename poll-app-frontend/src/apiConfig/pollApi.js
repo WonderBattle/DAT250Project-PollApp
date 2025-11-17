@@ -62,7 +62,7 @@ export const getAllPublicPolls = async () => {
     return response.data;
 };
 
-export const usersPoll = async () => {
-    const  response = await axiosConfig.get(`polls/user/{userID}`);
+export const usersPoll = async (userId) => {
+    const response = await axiosConfig.get(`/polls/user/${userId}`);
     return response.data;
-}
+};
