@@ -231,7 +231,87 @@ class PollControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
-    
+
+    @Test
+    @DisplayName("PUT /polls/{pollId}/privacy updates poll from public to private - owner")
+    void updatePollPrivacy_updatesFromPublicToPrivate_Owner() throws Exception {
+        // Ensure poll starts as public
+        poll.setPublicPoll(true);
+        pollRepository.save(poll);
+
+        mockMvc.perform(put("/polls/{pollId}/privacy", poll.getId())
+                        .param("isPublic", "false")
+                        .param("userId", alice.getId().toString()) // Alice is the owner
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.publicPoll").value(false));
+
+        // Verify in database
+        Poll updatedPoll = pollRepository.findById(poll.getId()).orElseThrow();
+        assertThat(updatedPoll.isPublicPoll()).isFalse();
+    }
+
+    @Test
+    @DisplayName("PUT /polls/{pollId}/privacy updates poll from private to public - owner")
+    void updatePollPrivacy_updatesFromPrivateToPublic_Owner() throws Exception {
+        // Set poll as private initially
+        poll.setPublicPoll(false);
+        pollRepository.save(poll);
+
+        mockMvc.perform(put("/polls/{pollId}/privacy", poll.getId())
+                        .param("isPublic", "true")
+                        .param("userId", alice.getId().toString()) // Alice is the owner
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.publicPoll").value(true));
+
+        // Verify in database
+        Poll updatedPoll = pollRepository.findById(poll.getId()).orElseThrow();
+        assertThat(updatedPoll.isPublicPoll()).isTrue();
+    }
+
+    @Test
+    @DisplayName("PUT /polls/{pollId}/privacy returns 404 for non-owner")
+    void updatePollPrivacy_returnsNotFoundForNonOwner() throws Exception {
+        // Create a second user (Bob)
+        User bob = new User("bob", "bob@example.com");
+        bob.setPassword(new BCryptPasswordEncoder().encode("password123"));
+        bob = userRepository.save(bob);
+
+        mockMvc.perform(put("/polls/{pollId}/privacy", poll.getId())
+                        .param("isPublic", "false")
+                        .param("userId", bob.getId().toString()) // Bob is NOT the owner
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isNotFound());
+
+        // Verify poll wasn't changed
+        Poll unchangedPoll = pollRepository.findById(poll.getId()).orElseThrow();
+        assertThat(unchangedPoll.isPublicPoll()).isEqualTo(poll.isPublicPoll());
+    }
+
+    @Test
+    @DisplayName("PUT /polls/{pollId}/privacy returns 404 for non-existent poll")
+    void updatePollPrivacy_returnsNotFoundForNonExistentPoll() throws Exception {
+        UUID nonExistentPollId = UUID.randomUUID();
+
+        mockMvc.perform(put("/polls/{pollId}/privacy", nonExistentPollId)
+                        .param("isPublic", "true")
+                        .param("userId", alice.getId().toString())
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("PUT /polls/{pollId}/privacy returns 404 for non-existent user")
+    void updatePollPrivacy_returnsNotFoundForNonExistentUser() throws Exception {
+        UUID nonExistentUserId = UUID.randomUUID();
+
+        mockMvc.perform(put("/polls/{pollId}/privacy", poll.getId())
+                        .param("isPublic", "true")
+                        .param("userId", nonExistentUserId.toString())
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isNotFound());
+    }
 
     private String obtainAccessToken(String email) throws Exception {
         // Build login payload

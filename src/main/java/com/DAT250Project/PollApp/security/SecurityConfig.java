@@ -87,6 +87,7 @@ public class SecurityConfig {
                         // Protect other endpoints
                         .requestMatchers("/polls", "/polls/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/polls/user/{userId}").authenticated() // We'll handle authorization in service layer
+                        .requestMatchers(HttpMethod.PUT, "/polls/*/privacy").authenticated()
                         .anyRequest().authenticated()
                 )
 
