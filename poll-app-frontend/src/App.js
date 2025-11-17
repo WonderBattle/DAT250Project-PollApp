@@ -11,7 +11,7 @@ function App() {
         <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/dashboard" element={<Dashboard/>} />
-            <Route path="/vote/:pollId" element={<VotingPage />} />
+            <Route path="/votingpage" element={<VotingPage />} />
             <Route path="/publicdashboard" element={<PublicDashboardPage />} />
             <Route path="/vote/public/:pollId" element={<PublicVotingPage/>}/>
         </Routes>

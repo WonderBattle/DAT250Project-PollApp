@@ -55,12 +55,11 @@ const Dashboard = () => {
             <main className="main-content">
                 <h1 className="page-title">Poll Dashboard</h1>
 
-                {/* ADD THIS BUTTON */}
                 <button
-                    className="public-polls-btn"
-                    onClick={() => navigate("/publicdashboard")}
+                    className="vote-main-btn"
+                    onClick={() => navigate("/votingpage")}
                 >
-                    View Public Polls
+                    Go to Voting Page
                 </button>
 
                 <div className="toggle-container">
