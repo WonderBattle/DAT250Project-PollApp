@@ -3,29 +3,16 @@ import PollCard from "../components/PollCard";
 import Header from "../components/Header";
 import CreatePollCard from "../components/CreatePollCard"
 import "../styles/Dashboard.css";
-import {deletePoll, getPrivatePollById} from "../apiConfig/pollApi";
-
-
-//------------------sample poll data just for visual testing------------------
-/*const samplePolls = [
-    {
-        id: 1,
-        question: "What’s your favorite pastel color?",
-        createdBy: "Enikő",
-        validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        options: ["Pink", "Lavender", "Mint", "Peach"],
-        totalVotes: 12,
-    }
-];*/
-
+import { deletePoll, usersPoll } from "../apiConfig/pollApi";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
     const [polls, setPolls] = useState([]);
     const [showCreatePollCard, setShowCreatePollCard] = useState(false);
-   //saving current logged in user
     const [currentUser, setCurrentUser] = useState(null);
     const [showActiveOnly, setShowActiveOnly] = useState(true);
 
+    const navigate = useNavigate();
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
@@ -35,34 +22,17 @@ const Dashboard = () => {
 
     useEffect(() => {
         const fetchPolls = async () => {
-            if (!currentUser) return; // Wait until user is loaded
-
+            if (!currentUser) return;
             try {
-                const data = await getPrivatePollById(currentUser.id);
-
-                if (!data || data.length === 0) {
-                    console.warn("No polls found for this user.");
-                } else {
-                    console.log(`Fetched ${data.length} private polls for user ${currentUser.username}`);
-                }
-
+                const data = await usersPoll(currentUser.id);
                 setPolls(data);
             } catch (error) {
-                console.error("Error fetching polls from backend:", error.message || error);
+                console.error("Error fetching polls from backend:", error);
             }
         };
         fetchPolls();
     }, [currentUser]);
 
-    //--------------------simulate loading polls--------------------
-    /*useEffect(() => {
-        setTimeout(() => {
-            setPolls(samplePolls);
-        }, 500);
-    }, []);*/
-
-
-    //-------------------delete poll -------------------
     const handleDeletePoll = async (pollId) => {
         try {
             await deletePoll(pollId);
@@ -72,12 +42,6 @@ const Dashboard = () => {
         }
     };
 
-    //-------------------vote click (redirect later) -------------------
-    const handleVoteClick = (pollId) => {
-        console.log("Redirect to vote page for poll:", pollId);
-        // later we should use navigate(`/poll/${pollId}`);
-    };
-    //-------------------toggle switch for active or expired listing -------------------
     const filteredPolls = polls.filter((poll) => {
         const now = new Date();
         const validUntil = new Date(poll.validUntil);
@@ -90,6 +54,14 @@ const Dashboard = () => {
             <Header />
             <main className="main-content">
                 <h1 className="page-title">Poll Dashboard</h1>
+
+                {/* ADD THIS BUTTON */}
+                <button
+                    className="public-polls-btn"
+                    onClick={() => navigate("/publicdashboard")}
+                >
+                    View Public Polls
+                </button>
 
                 <div className="toggle-container">
                     <span className={!showActiveOnly ? "inactive" : ""}>Expired</span>
@@ -128,7 +100,6 @@ const Dashboard = () => {
                             key={poll.id}
                             poll={poll}
                             onDelete={handleDeletePoll}
-                            onVote={handleVoteClick}
                             currentUser={currentUser}
                         />
                     ))

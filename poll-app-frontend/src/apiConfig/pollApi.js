@@ -44,11 +44,6 @@ export  const  getPrivatePollById = async (pollId) => {
     return response.data;
 };
 
-//----------getting poll by ID (only private)---------------
-export  const  getPublicPollById = async (pollId) => {
-    const  response = await  axiosConfig.get(`/polls/public/${pollId}`);
-    return response.data;
-};
 
 // ------------------ create a vote ------------------
 export const createVoteApi = async (pollId, voteData) => {
@@ -66,3 +61,8 @@ export const getAllPublicPolls = async () => {
     const response = await axiosConfig.get("/polls/public");
     return response.data;
 };
+
+export const usersPoll = async () => {
+    const  response = await axiosConfig.get(`polls/user/{userID}`);
+    return response.data;
+}
