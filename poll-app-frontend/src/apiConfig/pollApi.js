@@ -7,12 +7,8 @@ export const getAllPolls = async () => {
 };
 
 //--------------creating a new poll ------------
-export const createPoll = async (payload, token) => {
-    const response = await axiosConfig.post("/polls", payload, {
-        headers: {
-            Authorization: token ? `Bearer ${token}` : undefined
-        }
-    });
+export const createPoll = async (payload) => {
+    const response = await axiosConfig.post("/polls", payload);
     return response.data;
 };
 
@@ -64,5 +60,15 @@ export const getAllPublicPolls = async () => {
 
 export const usersPoll = async (userId) => {
     const response = await axiosConfig.get(`/polls/user/${userId}`);
+    return response.data;
+};
+
+// ------------------ update poll privacy ------------------
+export const updatePollPrivacy = async (pollId, isPublic, userId) => {
+    const response = await axiosConfig.put(
+        `/polls/${pollId}/privacy`,
+        {},
+        { params: { isPublic, userId } }
+    );
     return response.data;
 };

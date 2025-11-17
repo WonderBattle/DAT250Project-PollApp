@@ -4,7 +4,8 @@ import { Trash2 } from "lucide-react";
 import {
     addOption,
     deleteOption,
-    getPollResults
+    getPollResults,
+    updatePollPrivacy
 } from "../apiConfig/pollApi";
 
 const PollCard = ({ poll, onDelete, currentUser }) => {
@@ -23,6 +24,10 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
 
     const [editMode, setEditMode] = useState(false);
     const [newOption, setNewOption] = useState("");
+
+    // ----visibility editing----
+    const [isPublic, setIsPublic] = useState(poll.publicPoll);
+    const [originalVisibility, setOriginalVisibility] = useState(poll.publicPoll);
 
     // ---------------- load vote counts ----------------
     useEffect(() => {
@@ -81,18 +86,42 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
         }
     };
 
+    // ----------------save button----------------
+    const handleSave = async () => {
+        try {
+            if (isPublic !== originalVisibility) {
+                await updatePollPrivacy(poll.id, isPublic, currentUser.id);
+            }
+
+            setOriginalVisibility(isPublic);
+            setEditMode(false);
+        } catch (error) {
+            console.error("Failed to update privacy", error);
+            alert("Could not update poll visibility");
+        }
+    };
+
+    // ----------------cancel button ----------------
+    const handleCancel = () => {
+        setIsPublic(originalVisibility);
+        setEditMode(false);
+    };
+
     return (
         <div className={`poll-card ${isExpired ? "expired" : ""}`}>
             <div className="poll-header">
                 <div className="poll-header-text">
                     <h2 className="poll-question">{poll.question}</h2>
                     <p className="poll-meta">
-                        Created by{" "}
-                        <strong>{poll.createdBy?.username || "Unknown"}</strong>{" "}
-                        | Valid until:{" "}
+                        Created by <strong>{poll.createdBy?.username || "Unknown"}</strong> |
+                        Valid until:{" "}
                         {poll.validUntil
                             ? new Date(poll.validUntil).toLocaleDateString()
                             : "N/A"}
+                    </p>
+
+                    <p className="poll-meta">
+                        Visibility: <strong>{isPublic ? "Public" : "Private"}</strong>
                     </p>
                 </div>
 
@@ -101,6 +130,31 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
 
             {/* ----------------list options---------------- */}
             <div className="poll-body">
+
+                {editMode && (
+                    <div style={{marginTop: "10px", marginBottom: "20px"}}>
+                        <label className="font-bold mb-2 block">Poll Visibility<br/></label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="pollVisibility"
+                                checked={isPublic === true}
+                                onChange={() => setIsPublic(true)}
+                            />
+                            Public
+                        </label>
+                        <label style={{marginLeft: "20px"}}>
+                            <input
+                                type="radio"
+                                name="pollVisibility"
+                                checked={isPublic === false}
+                                onChange={() => setIsPublic(false)}
+                            />
+                            Private
+                        </label>
+                    </div>
+                )}
+
                 <div className="poll-options">
                     {options.map(opt => (
                         <div key={opt.id} className="poll-option">
@@ -140,10 +194,7 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
                     {!editMode ? (
                         <>
                             {currentUser?.id === poll.createdBy?.id && (
-                                <button
-                                    className="edit-btn"
-                                    onClick={() => setEditMode(true)}
-                                >
+                                <button className="edit-btn" onClick={() => setEditMode(true)}>
                                     Edit
                                 </button>
                             )}
@@ -156,17 +207,11 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
                         </>
                     ) : (
                         <>
-                            <button
-                                className="save-btn"
-                                onClick={() => setEditMode(false)}
-                            >
+                            <button className="save-btn" onClick={handleSave}>
                                 Save
                             </button>
 
-                            <button
-                                className="cancel-btn"
-                                onClick={() => setEditMode(false)}
-                            >
+                            <button className="cancel-btn" onClick={handleCancel}>
                                 Cancel
                             </button>
                         </>
