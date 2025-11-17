@@ -276,6 +276,34 @@ public class PollManager {
         return poll;
     }
 
+    public Poll updatePollPrivacy(UUID pollId, boolean isPublic, UUID userId) {
+        // Find the poll
+        Poll poll = pollRepository.findById(pollId).orElse(null);
+        if (poll == null) return null;
+
+        // Check if user exists and is the poll owner (like your vote authorization)
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) return null;
+
+        if (!poll.getCreatedBy().getId().equals(userId)) {
+            return null; // Not the owner - return null like your vote logic
+        }
+
+        // Update the privacy status
+        poll.setPublicPoll(isPublic);
+
+        // Save the updated poll
+        Poll updatedPoll = pollRepository.save(poll);
+
+        // Invalidate relevant caches
+        redisCacheService.delete("poll", pollId);
+        redisCacheService.delete("all_polls", null);
+        redisCacheService.delete("user_polls", poll.getCreatedBy().getId());
+        redisCacheService.delete("poll_results", pollId);
+
+        return updatedPoll;
+    }
+
     // Add an option to a poll with cache invalidation
     public VoteOption addOptionToPoll(UUID pollId, VoteOption option) {
         // Find the target poll from database

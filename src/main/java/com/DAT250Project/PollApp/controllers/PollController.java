@@ -75,6 +75,20 @@ public class PollController {
         return  ResponseEntity.ok(poll); // OK = 200
     }
 
+    // Update the privacy of a poll (private or public)
+    @Operation(summary = "Update poll privacy status", description = "Update whether a poll is public or private")
+    @PutMapping("/{pollId}/privacy")
+    public ResponseEntity<Poll> updatePollPrivacy(@PathVariable UUID pollId,
+                                                  @RequestParam boolean isPublic,
+                                                  @RequestParam UUID userId) {
+
+        Poll updatedPoll = pollManager.updatePollPrivacy(pollId, isPublic, userId); // Add userId here
+        if (updatedPoll == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(updatedPoll);
+    }
+
     //Delete a poll by id
     //TODO choose between return a Poll or a boolean
     @Operation(summary = "Delete a poll", description = "Deletes a poll by its ID")
