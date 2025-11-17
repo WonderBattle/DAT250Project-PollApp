@@ -10,13 +10,15 @@ const PublicDashboardPage = () => {
     const [showActiveOnly, setShowActiveOnly] = useState(true);
     const navigate = useNavigate();
 
+    const user = JSON.parse(localStorage.getItem("user"));
+
     useEffect(() => {
         const fetchPolls = async () => {
             try {
                 const data = await getAllPolls();
                 setPolls(data);
             } catch (error) {
-                console.error("Error fetching public polls:", error.message || error);
+                console.error("Error fetching public polls:", error);
             }
         };
         fetchPolls();
@@ -30,7 +32,7 @@ const PublicDashboardPage = () => {
         // if no validUntil or no options, treat as expired
         const hasOptions = poll.options && poll.options.length > 0;
         const expired = !isActive || !hasOptions;
-        return showActiveOnly ? !expired === true : expired === true;
+        return showActiveOnly ? !expired : expired;
     });
 
     //-------------------vote click-------------------
@@ -44,9 +46,16 @@ const PublicDashboardPage = () => {
             <Header />
             <main className="main-content">
                 <h1 className="page-title">Public Polls</h1>
-                <button className="back-btn" onClick={() => navigate("/")}>
-                    ← Back to Home
-                </button>
+                {user ? (
+                    <button className="back-btn" onClick={() => navigate("/dashboard")}>
+                        ← Back to My Dashboard
+                    </button>
+                ) : (
+                    <button className="back-btn" onClick={() => navigate("/")}>
+                        ← Back to Home
+                    </button>
+                )}
+
                 <div className="toggle-container">
                     <span className={!showActiveOnly ? "inactive" : ""}>Expired</span>
                     <label className="switch">
