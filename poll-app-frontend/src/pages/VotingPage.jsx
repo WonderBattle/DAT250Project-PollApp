@@ -1,37 +1,36 @@
-import React, {useEffect, useState} from "react";
-import {useNavigate, useParams} from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import VotingCard from "../components/VotingCard";
 import "../styles/VotingPage.css";
-import {getPollById} from "../apiConfig/pollApi";
-
-//----------------sample data just for testing-----------------------
-/*const samplePoll = {
-    id: 1,
-    question: "What’s your favorite pastel color?",
-    options: ["Pink", "Lavender", "Mint", "Peach"],
-    createdBy: "Enikő",
-    publishedAt: new Date(),
-    validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-};*/
+import { getAllPolls } from "../apiConfig/pollApi";
 
 const VotingPage = () => {
-    const { pollId } = useParams();
-    const [poll, setPoll] = useState(null);
+    const [polls, setPolls] = useState([]);
+    const [showActiveOnly, setShowActiveOnly] = useState(true);
     const navigate = useNavigate();
-    // const poll = samplePoll; //should be replaced with backend fetching
+
+    const loggedUser = JSON.parse(localStorage.getItem("user"));
 
     useEffect(() => {
-        const fetchPoll = async () => {
+        const fetchPolls = async () => {
             try {
-                const data = await getPollById(pollId);
-                setPoll(data);
+                const data = await getAllPolls();
+                setPolls(data);
             } catch (error) {
-                console.error("Error fetching poll:", error);
+                console.error("Error loading polls:", error);
             }
         };
-        fetchPoll();
-    }, [pollId]);
+        fetchPolls();
+    }, []);
+
+    // ----------- filter active / expired polls -----------
+    const filteredPolls = polls.filter(poll => {
+        const now = new Date();
+        const validUntil = new Date(poll.validUntil);
+        const isActive = validUntil > now;
+        return showActiveOnly ? isActive : !isActive;
+    });
 
     //----------------------html return------------------------
     return (
@@ -41,7 +40,29 @@ const VotingPage = () => {
                 <button className="back-btn" onClick={() => navigate("/dashboard")}>
                     ← Back to Dashboard
                 </button>
-                {poll ? <VotingCard poll={poll} /> : <p>Loading poll...</p>}
+
+                <h1 className="page-title">All Polls</h1>
+
+                <div className="toggle-container">
+                    <span className={!showActiveOnly ? "inactive" : ""}>Expired</span>
+                    <label className="switch">
+                        <input
+                            type="checkbox"
+                            checked={showActiveOnly}
+                            onChange={() => setShowActiveOnly(!showActiveOnly)}
+                        />
+                        <span className="slider"></span>
+                    </label>
+                    <span className={showActiveOnly ? "active" : ""}>Active</span>
+                </div>
+
+                {filteredPolls.length > 0 ? (
+                    filteredPolls.map(poll => (
+                        <VotingCard key={poll.id} poll={poll} />
+                    ))
+                ) : (
+                    <p>No {showActiveOnly ? "active" : "expired"} polls available.</p>
+                )}
             </main>
         </div>
     );

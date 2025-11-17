@@ -72,3 +72,9 @@ export const updatePollPrivacy = async (pollId, isPublic, userId) => {
     );
     return response.data;
 };
+
+//-----------------------update selected vote------------------------------
+export const updateVoteApi = async (pollId, voteData) => {
+    const response = await axiosConfig.put(`/polls/${pollId}/votes`, voteData);
+    return response.data;
+};
