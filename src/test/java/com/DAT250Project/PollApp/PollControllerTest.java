@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.util.Map;
+import java.util.UUID;
 
 
 /**
@@ -205,6 +206,32 @@ class PollControllerTest {
                 .andExpect(jsonPath("$[?(@.question=='Which is best?')]").exists());
     }
 
+    @Test
+    @DisplayName("GET /polls/user/{userId} returns user's own polls")
+    void getUserPolls_returnsUserPolls() throws Exception {
+        mockMvc.perform(get("/polls/user/{userId}", alice.getId())
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.question=='Which is best?')]").exists());
+    }
+
+    @Test
+    @DisplayName("GET /polls/user/{userId} returns empty list for user with no polls")
+    void getUserPolls_returnsEmptyForUserWithNoPolls() throws Exception {
+        // Create a second user with no polls
+        User bob = new User("bob", "bob@example.com");
+        bob.setPassword(new BCryptPasswordEncoder().encode("password123"));
+        bob = userRepository.save(bob);
+
+        // Get Bob's JWT token
+        String bobToken = obtainAccessToken(bob.getEmail());
+
+        mockMvc.perform(get("/polls/user/{userId}", bob.getId())
+                        .header("Authorization", "Bearer " + bobToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+    
 
     private String obtainAccessToken(String email) throws Exception {
         // Build login payload
