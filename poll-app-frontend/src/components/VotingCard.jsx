@@ -15,6 +15,9 @@ const VotingCard = ({ poll }) => {
     const [alreadyVoted, setAlreadyVoted] = useState(false);
     const [editMode, setEditMode] = useState(false);
 
+    const isExpired =
+        !poll.validUntil || new Date(poll.validUntil) < new Date() || !poll.options || poll.options.length === 0;
+
     // ----------------check if the user already voted ----------------
     useEffect(() => {
         const userVote = poll.options.find((opt) =>
@@ -105,12 +108,17 @@ const VotingCard = ({ poll }) => {
     };
 
     return (
-        <div className="poll-card">
-            {alreadyVoted && !editMode && (
+        <div className={`poll-card ${isExpired ? "expired" : ""}`}>
+            {alreadyVoted && !editMode && !isExpired && (
                 <span className="voted-label">You already voted</span>
             )}
+            {isExpired && <span className="expired-label">Closed</span>}
 
             <h2>{poll.question}</h2>
+            <p className="poll-meta">
+                Created by <strong>{poll.createdBy?.username || "Unknown"}</strong> |{" "}
+                Valid until: {poll.validUntil ? new Date(poll.validUntil).toLocaleDateString() : "N/A"}
+            </p>
 
             <div className="poll-options">
                 {options.map((opt) => (
@@ -120,28 +128,30 @@ const VotingCard = ({ poll }) => {
                             name={`poll-${poll.id}`}
                             checked={selectedOptionId === opt.id}
                             onChange={() => setSelectedOptionId(opt.id)}
-                            disabled={!editMode && alreadyVoted}
+                            disabled={!editMode && (alreadyVoted || isExpired)}
                         />
                         {opt.caption} ({opt.votesCount || 0} votes)
                     </label>
                 ))}
             </div>
 
-            <div className="poll-buttons">
-                {!editMode ? (
-                    <>
-                        {!alreadyVoted && <button onClick={handleVote}>Vote</button>}
-                        {alreadyVoted && (
-                            <button onClick={() => setEditMode(true)}>Edit Vote</button>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <button onClick={handleSave}>Save</button>
-                        <button onClick={handleCancel}>Cancel</button>
-                    </>
-                )}
-            </div>
+            {!isExpired && (
+                <div className="poll-buttons">
+                    {!editMode ? (
+                        <>
+                            {!alreadyVoted && <button className="vote-btn" onClick={handleVote}>Vote</button>}
+                            {alreadyVoted && (
+                                <button className="edit-btn" onClick={() => setEditMode(true)}>Edit Vote</button>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <button className="save-btn" onClick={handleSave}>Save</button>
+                            <button className="cancel-btn" onClick={handleCancel}>Cancel</button>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
