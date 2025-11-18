@@ -3,7 +3,7 @@ import PublicPollCard from "../components/PublicPollCard";
 import Header from "../components/Header";
 import "../styles/Dashboard.css";
 import { useNavigate } from "react-router-dom";
-import { getAllPolls } from "../apiConfig/pollApi";
+import {getAllPolls, getAllPublicPolls} from "../apiConfig/pollApi";
 
 const PublicDashboardPage = () => {
     const [polls, setPolls] = useState([]);
@@ -15,7 +15,7 @@ const PublicDashboardPage = () => {
     useEffect(() => {
         const fetchPolls = async () => {
             try {
-                const data = await getAllPolls();
+                const data = await getAllPublicPolls();
                 setPolls(data);
             } catch (error) {
                 console.error("Error fetching public polls:", error);
