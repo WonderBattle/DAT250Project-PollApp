@@ -13,10 +13,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
                 description = "Poll Application API from DAT250-Group11"
         )
 )
-public class Dat250ProyectGroup11Application {
+public class Dat250ProjectGroup11Application {
 
 	public static void main(String[] args) {
-		SpringApplication.run(Dat250ProyectGroup11Application.class, args);
+		SpringApplication.run(Dat250ProjectGroup11Application.class, args);
 	}
 
 }

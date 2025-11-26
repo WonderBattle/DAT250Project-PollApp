@@ -7,48 +7,61 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.*;
 
+/**
+ * Represents a poll containing a question, visibility settings, creator, and vote options.
+ */
 @Entity
 @Table(name = "polls")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Poll {
 
+    /** Unique identifier of the poll. */
     @Id
     @GeneratedValue
     private UUID id;
 
+    /** The question being asked in the poll. */
     @Column(nullable = false)
     private String question;
 
+    /** Timestamp for when the poll was published. */
     private Instant publishedAt;
 
+    /** Timestamp indicating until when the poll is valid. */
     @Column(nullable = false)
     private Instant validUntil;
 
+    /** Indicates whether the poll is public or private. */
     @Column(nullable = false)
-    private boolean publicPoll = true; // true = public, false = private
+    private boolean publicPoll = true;
 
+    /** User who created the poll. */
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by", nullable = false)
-    @JsonIgnoreProperties({"createdPolls", "votes"}) // Ignore User's collections
+    @JsonIgnoreProperties({"createdPolls", "votes"})
     private User createdBy;
 
+    /** List of vote options associated with the poll. */
     @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @OrderBy("presentationOrder ASC")
-    @JsonIgnoreProperties("poll") // Prevent option->poll->options cycle
+    @JsonIgnoreProperties("poll")
     private List<VoteOption> options = new ArrayList<>();
 
-    //CONSTRUCTORS
-    public Poll (){
+    /** Default constructor. */
+    public Poll() {}
 
-    }
-
+    /**
+     * Constructor for a poll with question and creator.
+     */
     public Poll(String question, User createdBy) {
         this.question = question;
         this.createdBy = createdBy;
     }
 
-    //CLARA
-    public Poll(UUID id, String question, User createdBy,  Instant validUntil, List<VoteOption> options) {
+    /**
+     * Full constructor including options, creator, and validity.
+     */
+    public Poll(UUID id, String question, User createdBy, Instant validUntil, List<VoteOption> options) {
         this.id = id;
         this.question = question;
         if(createdBy != null) {
@@ -65,64 +78,63 @@ public class Poll {
         }
     }
 
-    //SETTERS AND GETTERS
-    public void setId(UUID id) {
-        this.id = id;
-    }
-    public UUID getId() {
-        return id;
-    }
+    /** Sets the poll ID. */
+    public void setId(UUID id) { this.id = id; }
 
-    public void setQuestion(String question) {
-        this.question = question;
-    }
-    public String getQuestion() {
-        return question;
-    }
+    /** Returns the poll ID. */
+    public UUID getId() { return id; }
 
-    public void setPublishedAt(Instant publishedAt) {
-        this.publishedAt = publishedAt;
-    }
-    public Instant getPublishedAt() {
-        return publishedAt;
-    }
+    /** Sets the poll question. */
+    public void setQuestion(String question) { this.question = question; }
 
-    public void setValidUntil(Instant validUntil) {
-        this.validUntil=validUntil;
-    }
-    public Instant getValidUntil() {
-        return validUntil;
-    }
+    /** Returns the poll question. */
+    public String getQuestion() { return question; }
 
+    /** Sets the publish timestamp. */
+    public void setPublishedAt(Instant publishedAt) { this.publishedAt = publishedAt; }
+
+    /** Returns when the poll was published. */
+    public Instant getPublishedAt() { return publishedAt; }
+
+    /** Sets validity timestamp. */
+    public void setValidUntil(Instant validUntil) { this.validUntil = validUntil; }
+
+    /** Returns validity timestamp. */
+    public Instant getValidUntil() { return validUntil; }
+
+    /** Returns whether poll is public. */
     public boolean isPublicPoll() { return publicPoll; }
+
+    /** Sets the poll visibility. */
     public void setPublicPoll(boolean publicPoll) { this.publicPoll = publicPoll; }
 
-    //Relationships setters and getters
-    public void setCreatedBy(User createdBy) {
-        this.createdBy = createdBy;
-    }
-    public User getCreatedBy() {
-        return createdBy;
-    }
+    /** Sets the poll creator. */
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
 
-    public List<VoteOption> getOptions() {
-        return options;
-    }
-    public void setOptions(List<VoteOption> options) {
-        this.options = options;
-    }
+    /** Returns the poll creator. */
+    public User getCreatedBy() { return createdBy; }
 
-    public VoteOption getOption(int i){
-        return options.get(i);  // idk if is i or i-1
-    }
+    /** Returns the list of vote options. */
+    public List<VoteOption> getOptions() { return options; }
 
-    //METHODS
-    //DONE choosen parametrized constructor
+    /** Sets the vote options list. */
+    public void setOptions(List<VoteOption> options) { this.options = options; }
+
+    /**
+     * Retrieves a specific option by index.
+     */
+    public VoteOption getOption(int i) { return options.get(i); }
+
+    /**
+     * Adds a new vote option to the poll.
+     *
+     * @param caption text of the vote option
+     * @return the created VoteOption
+     */
     public VoteOption addVoteOption(String caption) {
-        int order = options.size()+1;            // <-- Determine presentationOrder
+        int order = options.size() + 1;
         VoteOption option = new VoteOption(caption, order, this);
         this.options.add(option);
         return option;
     }
-
 }

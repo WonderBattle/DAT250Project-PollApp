@@ -7,106 +7,92 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.*;
 
+/**
+ * Represents a vote cast by a user (or anonymous) on a poll option.
+ */
 @Entity
 @Table(name = "votes")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Vote {
 
+    /** Unique identifier for the vote. */
     @Id
     @GeneratedValue
     private UUID id;
 
+    /** When the vote was submitted. */
     private Instant publishedAt;
 
+    /** The user who cast the vote (nullable for anonymous). */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "voter_id", nullable = true)  // allow anonymous votes
-    @JsonIgnoreProperties({"votes", "createdPolls"}) // Ignore User's collections
+    @JoinColumn(name = "voter_id", nullable = true)
+    @JsonIgnoreProperties({"votes", "createdPolls"})
     private User voter;
 
+    /** The selected vote option. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "option_id", nullable = false)
-    @JsonIgnoreProperties({"votes", "poll"}) // Break cycles
+    @JsonIgnoreProperties({"votes", "poll"})
     private VoteOption option;
 
-    //CONSTRUCTORS
-    public Vote(){
+    /** Default constructor. */
+    public Vote() {}
 
-    }
-
-    public Vote (User voter, VoteOption option){
+    /**
+     * Creates a new vote.
+     *
+     * @param voter the user casting the vote
+     * @param option the option being voted for
+     */
+    public Vote(User voter, VoteOption option){
         this.voter = voter;
         this.option = option;
         this.publishedAt = Instant.now();
-        // CLARA
-        /*if(user != null) {  // there could be anonymous votes
-            this.user.getMyVotes().add(this);
-        }
-        this.option.getVotes().add(this);
-        */
     }
 
-    //SETTERS AND GETTERS
+    /** Sets the vote ID. */
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-    public UUID getId() {
-        return id;
-    }
+    /** Returns the vote ID. */
+    public UUID getId() { return id; }
 
-    public void setPublishedAt(Instant publishedAt) {
-        this.publishedAt = publishedAt;
-    }
-    public Instant getPublishedAt() {
-        return publishedAt;
-    }
+    /** Sets when the vote was published. */
+    public void setPublishedAt(Instant publishedAt) { this.publishedAt = publishedAt; }
 
-    //Relational setters and getters
-    public void setVoter(User voter) {
-        this.voter = voter;
-    }
-    public User getVoter() {
-        return voter;
-    }
+    /** Returns when the vote was published. */
+    public Instant getPublishedAt() { return publishedAt; }
 
+    /** Sets the voter. */
+    public void setVoter(User voter) { this.voter = voter; }
+
+    /** Returns the voter. */
+    public User getVoter() { return voter; }
+
+    /** Returns the voter ID or null for anonymous. */
     public UUID getVoterId() {
-        if (voter != null) {
-            return voter.getId();
-        }else{
-            return null;
-        }
+        return voter != null ? voter.getId() : null;
     }
 
+    /** Sets the voter ID safely. */
     public void setVoterId(UUID voterId){
-        if (this.voter == null) {
-            this.voter = new User();  // prevent NPE
-        }
+        if (this.voter == null) this.voter = new User();
         this.voter.setId(voterId);
     }
 
-    public void setOption(VoteOption option) {
-        this.option = option;
-    }
-    public VoteOption getOption() {
-        return option;
-    }
+    /** Sets the selected option. */
+    public void setOption(VoteOption option) { this.option = option; }
 
+    /** Returns the selected option. */
+    public VoteOption getOption() { return option; }
+
+    /** Returns the option ID. */
     public UUID getOptionId(){
-        if (option != null){
-            return option.getId();
-        }else{
-            return null;
-        }
+        return option != null ? option.getId() : null;
     }
 
+    /** Sets the option ID safely. */
     public void setOptionId(UUID optionId){
-        if (this.option == null) {
-            this.option = new VoteOption();
-        }
+        if (this.option == null) this.option = new VoteOption();
         this.option.setId(optionId);
     }
-
-    //METHODS
-
-
 }

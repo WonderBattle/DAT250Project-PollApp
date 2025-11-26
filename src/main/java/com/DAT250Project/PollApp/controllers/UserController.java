@@ -1,6 +1,5 @@
 package com.DAT250Project.PollApp.controllers;
 
-
 import com.DAT250Project.PollApp.PollManager;
 import com.DAT250Project.PollApp.model.Poll;
 import com.DAT250Project.PollApp.model.Vote;
@@ -21,12 +20,21 @@ public class UserController {
 
     private PollManager pollManager;
 
-    //CONSTRUCTOR
+    /**
+     * Constructs a UserController with the required PollManager dependency.
+     *
+     * @param pollManager the service layer responsible for user-related operations
+     */
     public UserController(PollManager pollManager) {
         this.pollManager = pollManager;
     }
 
-    //Create user
+    /**
+     * Creates a new user.
+     *
+     * @param user the user data to create
+     * @return the created user with HTTP 201 status
+     */
     @Operation(summary = "Create a new user", description = "Creates a new user account and returns the created user")
     @PostMapping
     public ResponseEntity<User> createUser (@RequestBody User user) {
@@ -34,14 +42,23 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);  // CREATED = 201
     }
 
-    //Get all users
+    /**
+     * Retrieves all registered users.
+     *
+     * @return list of users with HTTP 200 status
+     */
     @Operation(summary = "Get all users", description = "Returns a list of all registered users")
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(pollManager.getAllUsers()); // OK = 200
     }
 
-    //Get user by id
+    /**
+     * Retrieves a user by ID.
+     *
+     * @param userId UUID of the user
+     * @return the user with HTTP 200, or 404 if not found
+     */
     @Operation(summary = "Get a user", description = "Get a specific user by its id")
     @GetMapping("/{userId}")
     public ResponseEntity<User> getUserById(@PathVariable UUID userId) {
@@ -52,8 +69,12 @@ public class UserController {
         return  ResponseEntity.ok(user); // OK = 200
     }
 
-    //Delete user by id
-    //TODO choose between return an User or a boolean
+    /**
+     * Deletes a user by ID.
+     *
+     * @param userId UUID of the user to delete
+     * @return HTTP 204 if deleted, otherwise 404
+     */
     @Operation(summary = "Delete a user", description = "Delete a user by its id")
     @DeleteMapping("/{userId}")
     public ResponseEntity<User> deleteUser(@PathVariable UUID userId) {
@@ -64,18 +85,12 @@ public class UserController {
         return ResponseEntity.noContent().build();  //NO CONTENT = 204
     }
 
-    /*
-    public ResponseEntity<Void> deleteUser (@PathVariable UUID userId) {
-        boolean deleted = pollManager.deleteUserById(userId);
-        if (deleted) {
-            return ResponseEntity.noContent().build();  //NO CONTENT = 204
-        }else{
-            return ResponseEntity.notFound().build();  //NOT FOUND = 404
-        }
-    }
+    /**
+     * Retrieves all polls created by a specific user.
+     *
+     * @param userId UUID of the user
+     * @return list of polls or 404 if the user does not exist
      */
-
-    //Get user's polls
     @Operation(summary = "Get user's polls", description = "Return a list of the polls created by the user")
     @GetMapping("/{userId}/polls")
     public ResponseEntity<List<Poll>> getUserPolls(@PathVariable UUID userId) {
@@ -85,7 +100,12 @@ public class UserController {
         return ResponseEntity.ok(pollManager.getPollsByUser(userId));  //NO CONTENT = 204
     }
 
-    //Get user's votes
+    /**
+     * Retrieves all votes made by a specific user.
+     *
+     * @param userId UUID of the user
+     * @return a list of votes or 404 if the user does not exist
+     */
     @Operation(summary = "Get user's votes", description = "Return a list of the votes that the user has made")
     @GetMapping("/{userId}/votes")
     public ResponseEntity<List<Vote>> getUserVotes(@PathVariable UUID userId) {
