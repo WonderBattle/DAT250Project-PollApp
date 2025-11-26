@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    image: elcanchog/pollapp-backend:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_DATA_REDIS_HOST=redis
+    depends_on:
+      - rabbitmq
+      - redis
+
+  frontend:
+    image: elcanchog/pollapp-frontend:latest
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"

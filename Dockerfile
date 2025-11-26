@@ -1,17 +1,20 @@
-# 1. Use a base image with Java 21
+# 1. Use Java 21 image
 FROM eclipse-temurin:21-jdk-alpine
 
-# 2. Set the working directory
+# 2. Set working directory
 WORKDIR /app
 
-# 3. Copy your project files into the image
+# 3. Copy source code
 COPY . .
 
-# 4. Build the application (skip tests to save time)
+# 4. Build the application
 RUN ./gradlew bootJar -x test
 
-# 5. Move the built jar to the root and rename it
+# 5. Remove the 'plain' jar so only the main jar remains
+RUN rm -f build/libs/*-plain.jar
+
+# 6. Move the remaining jar to app.jar
 RUN mv build/libs/*.jar app.jar
 
-# 6. Command to run the app
+# 7. Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
