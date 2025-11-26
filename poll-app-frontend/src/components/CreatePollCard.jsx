@@ -1,39 +1,71 @@
 import React, { useState } from "react";
 import "../styles/VotingCard.css";
 import { Trash2 } from "lucide-react";
-import {createPoll} from "../apiConfig/pollApi"
+import { createPoll } from "../apiConfig/pollApi";
 
-//----------------------frontend without any backend yet--------------------
+/**
+ * CreatePollCard component allows a user to create a new poll.
+ * It includes inputs for the poll question, options, expiration date,
+ * and visibility (public/private). Handles validation and submission.
+ *
+ * @param {object} props - Component props
+ * @param {Function} props.onCancel - Callback to close the poll creation modal
+ * @param {object} props.currentUser - Current user object containing `id`, `username`, and `token`
+ *
+ * @returns {JSX.Element} The rendered CreatePollCard component
+ */
 const CreatePollCard = ({ onCancel, currentUser }) => {
+  /** @type {[string, Function]} Question input state */
     const [question, setQuestion] = useState("");
+
+  /** @type {[string, Function]} Expiration date input state */
     const [expirationDate, setExpirationDate] = useState("");
+
+  /** @type {[Array<{id: number, caption: string}>, Function]} Poll options state */
     const [options, setOptions] = useState([
         { id: 1, caption: "" },
         { id: 2, caption: "" },
     ]);
+
+  /** @type {[boolean, Function]} Poll visibility state */
     const [isPublicPoll, setIsPublicPoll] = useState(true);
 
+  /** Minimum allowed expiration date (tomorrow) */
     const today = new Date();
     today.setDate(today.getDate() + 1);
     const minDate = today.toISOString().split("T")[0];
 
-    //----------------------add new empty option--------------------
+  /**
+   * Adds a new empty poll option
+   */
     const handleAddOption = () => {
         setOptions([...options, { id: Date.now(), caption: "" }]);
     };
 
-    //----------------------delete poll option (but min 2 should)--------------------
+  /**
+   * Deletes a poll option by ID
+   * Ensures at least 2 options remain
+   *
+   * @param {number} id - ID of the option to delete
+   */
     const handleDeleteOption = (id) => {
         if (options.length <= 2) return alert("A poll must have at least 2 options.");
         setOptions(options.filter((opt) => opt.id !== id));
     };
 
-    //----------------------update option text--------------------
+  /**
+   * Updates the text of a poll option
+   *
+   * @param {number} id - ID of the option
+   * @param {string} value - New caption
+   */
     const handleOptionChange = (id, value) => {
         setOptions(options.map((opt) => (opt.id === id ? { ...opt, caption: value } : opt)));
     };
 
-    //----------------------create poll button methods--------------------
+  /**
+   * Validates inputs and creates a new poll by calling the API
+   */
     const handleCreatePoll = async () => {
         if (!question.trim()) return alert("Please enter the poll question.");
         if (!expirationDate) return alert("Please select an expiration date.");
@@ -43,7 +75,6 @@ const CreatePollCard = ({ onCancel, currentUser }) => {
             return <p>Loading user...</p>;
         }
 
-        // expiration date must be in the future
         if (new Date(expirationDate) <= new Date()) {
             return alert("Expiration date must be in the future.");
         }
@@ -56,7 +87,7 @@ const CreatePollCard = ({ onCancel, currentUser }) => {
                 question,
                 validUntil: new Date(expirationDate).toISOString(),
                 publicPoll: isPublicPoll,
-                createdBy: { id: currentUser.id }, // must exist
+                createdBy: { id: currentUser.id },
                 options: options.map(o => ({ caption: o.caption }))
             };
 
@@ -67,7 +98,7 @@ const CreatePollCard = ({ onCancel, currentUser }) => {
             console.log("Created Poll:", savedPoll);
             alert("Poll successfully created!");
 
-            onCancel(); // close modal
+            onCancel();
         } catch (error) {
             console.error("Error creating poll:", error);
             alert("Failed to create poll.");
@@ -76,6 +107,7 @@ const CreatePollCard = ({ onCancel, currentUser }) => {
 
     return (
         <div className="poll-card">
+            {/* Poll Header */}
             <div className="poll-header">
                 <div className="poll-header-text">
                     <h2 className="poll-question">Create a New Poll</h2>
@@ -86,6 +118,7 @@ const CreatePollCard = ({ onCancel, currentUser }) => {
                 </div>
             </div>
 
+            {/* Poll Body */}
             <div className="poll-body">
                 <label style={{ fontWeight: "bold", marginBottom: "5px", display: "block" }}>
                     Expiration Date
@@ -94,7 +127,7 @@ const CreatePollCard = ({ onCancel, currentUser }) => {
                     <input
                         type="date"
                         value={expirationDate}
-                        min={minDate} // prevent selecting today or past dates
+                        min={minDate}
                         onChange={(e) => setExpirationDate(e.target.value)}
                         className="new-option-input"
                     />

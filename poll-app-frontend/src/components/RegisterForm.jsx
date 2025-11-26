@@ -2,57 +2,81 @@ import React, {useState} from "react";
 import "../styles/LoginForm.css";
 import { register } from "../apiConfig/authApi";
 
-//-----------------------constant variables----------------------------
-
-const RegisterForm = ({onSwitch}) => {
+/**
+ * RegisterForm component allows a new user to register.
+ * Users can enter a username, email and password, then submit to register.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {function} props.onSwitch - Callback function to switch back to login form
+ * @returns {JSX.Element} Rendered RegisterForm component
+ */
+const RegisterForm = ({ onSwitch }) => {
+    /** Username input state */
     const [username, setUsername] = useState("");
+
+    /** Email input state */
     const [email, setEmail] = useState("");
+
+    /** Password input state */
     const [password, setPassword] = useState("");
 
-//-----------------------registrating new (fake) user----------------------------
+    /**
+     * Validates email format.
+     * @param {string} email
+     * @returns {boolean} True if valid, false otherwise
+     */
+    const isValidEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
+
+    /**
+     * Validates password: minimum 6 characters, must include letters and numbers.
+     * @param {string} password
+     * @returns {boolean} True if valid, false otherwise
+     */
+    const isValidPassword = (password) => {
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+        return passwordRegex.test(password);
+    };
+
+    /**
+     * Handles the registration of a new user.
+     * Calls backend API and saves the returned user object to localStorage.
+     * Alerts the user about success or failure.
+     */
     const handleRegister = async () => {
         if (!username || !email || !password) {
             alert("Please fill in all fields");
             return;
         }
 
-        /*
-        try {
-            // Fake register for now
-            const newUser = { username, email };
-            localStorage.setItem("user", JSON.stringify(newUser));
-            console.log("Registered user:", newUser);
-            alert("Registration successful!");
-            onSwitch(); // switching back here to login form
-        } catch (error) {
-            console.error("Registration error:", error);
-            alert("Something went wrong");
+        if (!isValidEmail(email)) {
+            alert("Please enter a valid email address");
+            return;
         }
-         */
+
+        if (!isValidPassword(password)) {
+            alert("Password must be at least 6 characters long and contain letters and numbers");
+            return;
+        }
 
         try {
-            // Call backend register endpoint
-            //await register(username, email, password);
-            //console.log("Registered user:", { username, email });
             const response = await register(username, email, password);
-            const createdUser = response.data; // this contains the backend-assigned UUID
+            const createdUser = response.data;
 
-            // Save the full user in localStorage
             localStorage.setItem("user", JSON.stringify(createdUser));
 
             console.log("Registered user:", createdUser);
             alert("Registration successful! Please log in.");
-            onSwitch(); // switch back to login form
+            onSwitch();
         } catch (error) {
             console.error("Registration error:", error);
-            // If server returns a message, show it; otherwise generic message
             const msg = error?.response?.data || "Something went wrong";
             alert(`Registration failed: ${msg}`);
         }
-
     };
-
-    //-----------------------chtml returning----------------------------
 
     return (
         <div className="login-card">

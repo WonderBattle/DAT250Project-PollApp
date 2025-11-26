@@ -6,9 +6,20 @@ import Footer from "../components/Footer";
 import RegisterForm from "../components/RegisterForm";
 import {useNavigate} from "react-router-dom";
 
+/**
+ * HomePage component renders the landing page with login and registration forms.
+ * Also provides a button to navigate to public polls dashboard.
+ *
+ * @component
+ * @returns {JSX.Element} Rendered HomePage
+ */
 const HomePage = () => {
+    /** Flag to toggle between showing login or registration form */
     const [showRegister, setShowregister] = useState(false);
-    const navigate = useNavigate()
+
+    /** Router navigation function */
+    const navigate = useNavigate();
+
     return (
         <div className="desktop-1">
             <Header/>
@@ -21,6 +32,7 @@ const HomePage = () => {
                         Public Polls
                     </button>
                 </div>
+
                 {showRegister ? (
                     <RegisterForm onSwitch={() => setShowregister(false)} />
                 ) : (

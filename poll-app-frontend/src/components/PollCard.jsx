@@ -8,28 +8,48 @@ import {
     updatePollPrivacy
 } from "../apiConfig/pollApi";
 
+/**
+ * PollCard component displays a poll with options, vote counts and editing functionality.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Object} props.poll - Poll data object
+ * @param {string} props.poll.id - Poll ID
+ * @param {string} props.poll.question - Poll question
+ * @param {string} props.poll.validUntil - Poll expiration date
+ * @param {Array} props.poll.options - List of poll options
+ * @param {boolean} props.poll.publicPoll - Poll visibility
+ * @param {Object} props.poll.createdBy - User who created the poll
+ * @param {Function} props.onDelete - Callback function to delete the poll
+ * @param {Object} props.currentUser - Current logged-in user object
+ * @returns {JSX.Element} The rendered PollCard component
+ */
 const PollCard = ({ poll, onDelete, currentUser }) => {
-
+    /** Boolean flag to mark if poll is expired */
     const isExpired =
         !poll.validUntil ||
         new Date(poll.validUntil) < new Date() ||
         !poll.options ||
         poll.options.length === 0;
 
+    /** Poll options state with vote counts */
     const [options, setOptions] = useState(
-        poll.options
-            ? poll.options.map(o => ({ ...o, votesCount: 0 }))
-            : []
+        poll.options ? poll.options.map(o => ({ ...o, votesCount: 0 })) : []
     );
 
+    /** Flag to toggle edit mode */
     const [editMode, setEditMode] = useState(false);
+
+    /** New option text input */
     const [newOption, setNewOption] = useState("");
 
-    // ----visibility editing----
+    /** Poll visibility state */
     const [isPublic, setIsPublic] = useState(poll.publicPoll);
     const [originalVisibility, setOriginalVisibility] = useState(poll.publicPoll);
 
-    // ---------------- load vote counts ----------------
+    /**
+     * Load vote counts for each option on component mount.
+     */
     useEffect(() => {
         const loadVotes = async () => {
             try {
@@ -41,11 +61,12 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
                 console.error("Failed loading vote counts", err);
             }
         };
-
         loadVotes();
     }, [poll.id]);
 
-    // ----------------add options ----------------
+    /**
+     * Adds a new option to the poll.
+     */
     const handleAddOption = async () => {
         const trimmed = newOption.trim();
         if (!trimmed) return alert("Option cannot be empty");
@@ -58,7 +79,6 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
                 caption: trimmed,
                 presentationOrder: options.length + 1
             });
-
             setOptions([...options, { ...created, votesCount: 0 }]);
             setNewOption("");
         } catch (error) {
@@ -67,8 +87,11 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
         }
     };
 
-    // ----------------delete option ----------------
-    const handleDeleteOption = async opt => {
+    /**
+     * Deletes a specific option from the poll.
+     * @param {Object} opt - Option object to delete
+     */
+    const handleDeleteOption = async (opt) => {
         try {
             if (opt.id) await deleteOption(poll.id, opt.id);
 
@@ -79,20 +102,23 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
         }
     };
 
-    //----------------delete whole poll----------------
+    /**
+     * Deletes the entire poll after confirmation.
+     */
     const handleDeletePoll = () => {
         if (window.confirm("Are you sure you want to delete this poll?")) {
             if (onDelete) onDelete(poll.id);
         }
     };
 
-    // ----------------save button----------------
+    /**
+     * Saves changes made in edit mode (visibility updates).
+     */
     const handleSave = async () => {
         try {
             if (isPublic !== originalVisibility) {
                 await updatePollPrivacy(poll.id, isPublic, currentUser.id);
             }
-
             setOriginalVisibility(isPublic);
             setEditMode(false);
         } catch (error) {
@@ -101,7 +127,7 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
         }
     };
 
-    // ----------------cancel button ----------------
+    /** Cancels editing and restores original visibility */
     const handleCancel = () => {
         setIsPublic(originalVisibility);
         setEditMode(false);
@@ -119,18 +145,14 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
                             ? new Date(poll.validUntil).toLocaleDateString()
                             : "N/A"}
                     </p>
-
                     <p className="poll-meta">
                         Visibility: <strong>{isPublic ? "Public" : "Private"}</strong>
                     </p>
                 </div>
-
                 {isExpired && <span className="expired-label">Closed</span>}
             </div>
 
-            {/* ----------------list options---------------- */}
             <div className="poll-body">
-
                 {editMode && (
                     <div style={{marginTop: "10px", marginBottom: "20px"}}>
                         <label className="font-bold mb-2 block">Poll Visibility<br/></label>
@@ -161,7 +183,6 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
                             <span>
                                 {opt.caption} ({opt.votesCount} votes)
                             </span>
-
                             {editMode && (
                                 <Trash2
                                     size={18}
@@ -173,7 +194,6 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
                     ))}
                 </div>
 
-                {/* ----------------add option in edit mode---------------- */}
                 {editMode && (
                     <div className="add-option">
                         <input
@@ -189,7 +209,6 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
                     </div>
                 )}
 
-                {/* ----------------buttons---------------- */}
                 <div className="poll-buttons">
                     {!editMode ? (
                         <>
@@ -198,7 +217,6 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
                                     Edit
                                 </button>
                             )}
-
                             {currentUser?.id === poll.createdBy?.id && (
                                 <button className="delete-btn" onClick={handleDeletePoll}>
                                     <Trash2 size={16} /> Delete
@@ -210,7 +228,6 @@ const PollCard = ({ poll, onDelete, currentUser }) => {
                             <button className="save-btn" onClick={handleSave}>
                                 Save
                             </button>
-
                             <button className="cancel-btn" onClick={handleCancel}>
                                 Cancel
                             </button>

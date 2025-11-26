@@ -3,26 +3,28 @@ import { useNavigate } from "react-router-dom";
 import "../styles/LoginForm.css";
 import { login } from "../apiConfig/authApi";
 
+/**
+ * LoginForm component allows users to log in with email and password.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Function} props.onSwitch - Function to switch between login and register forms
+ * @returns {JSX.Element} The rendered LoginForm component
+ */
 const LoginForm = ({ onSwitch }) => {
+    /** @type {[string, Function]} State for user email input */
     const [email, setEmail] = useState("");
+
+    /** @type {[string, Function]} State for user password input */
     const [password, setPassword] = useState("");
+
     const navigate = useNavigate();
 
-    //------------------ Handle Login ------------------
-    /*
-    const handleLogin = () => {
-        if (email.trim() === "" || password.trim() === "") {
-            alert("Please enter both email and password");
-            return;
-        }
-
-        // Simulate a login
-        localStorage.setItem("user", JSON.stringify({ email }));
-        console.log("Login successful:", email);
-        navigate("/dashboard");
-    };
+    /**
+     * Handles the login process.
+     * Validates input, calls the backend login endpoint, and stores the token and user info in localStorage.
+     * Navigates to the dashboard on success.
      */
-
     const handleLogin = async () => {
         if (email.trim() === "" || password.trim() === "") {
             alert("Please enter both email and password");
@@ -30,11 +32,9 @@ const LoginForm = ({ onSwitch }) => {
         }
 
         try {
-            // Call the backend login endpoint (AuthController /auth/login)
-            const response = await login(email, password); // from authApi.js
+            const response = await login(email, password);
             const { token, user } = response.data;
 
-            // Save the token and user info locally
             localStorage.setItem("token", token);
             localStorage.setItem("user", JSON.stringify(user));
 
@@ -46,7 +46,6 @@ const LoginForm = ({ onSwitch }) => {
         }
     };
 
-    //------------------ HTML to visualize ------------------
     return (
         <div className="login-card">
             <h2 className="welcome">Welcome Back</h2>

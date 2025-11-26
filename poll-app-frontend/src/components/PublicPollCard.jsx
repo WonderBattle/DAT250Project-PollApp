@@ -2,11 +2,35 @@ import React from "react";
 import "../styles/PollCard.css";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * PublicPollCard component displays a public poll with its question, creator, expiration date,
+ * and a vote button (disabled if the poll is expired).
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Object} props.poll - Poll data object
+ * @param {string} props.poll.id - Poll ID
+ * @param {string} props.poll.question - Poll question
+ * @param {string} props.poll.validUntil - Poll expiration date
+ * @param {Array} props.poll.options - Array of poll options
+ * @param {Object} props.poll.createdBy - User who created the poll
+ * @param {Function} [props.onVote] - Optional callback function when user votes
+ * @returns {JSX.Element} Rendered PublicPollCard component
+ */
 const PublicPollCard = ({ poll, onVote }) => {
     const navigate = useNavigate();
-    const isExpired = !poll.validUntil || new Date(poll.validUntil) < new Date() || !poll.options || poll.options.length === 0;
 
-    // -------------------vote button-----------------
+    /** Boolean flag indicating if the poll is expired */
+    const isExpired =
+        !poll.validUntil ||
+        new Date(poll.validUntil) < new Date() ||
+        !poll.options ||
+        poll.options.length === 0;
+
+    /**
+     * Handles clicking the vote button.
+     * Navigates to the public vote page if the poll is not expired.
+     */
     const handleVoteClick = () => {
         if (!isExpired) {
             navigate(`/vote/public/${poll.id}`);

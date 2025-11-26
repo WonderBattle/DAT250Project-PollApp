@@ -2,23 +2,49 @@ import React, { useEffect, useState } from "react";
 import "../styles/VotingCard.css";
 import { createVoteApi, updateVoteApi, getPollResults } from "../apiConfig/pollApi";
 
+/**
+ * VotingCard renders a poll where a logged-in user can vote and update their vote.
+ * Displays poll question, options and current vote counts.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Object} props.poll - Poll object containing metadata and options
+ * @param {string} props.poll.id - Unique ID of the poll
+ * @param {string} props.poll.question - Poll question text
+ * @param {Array} props.poll.options - Array of poll options
+ * @param {Object} props.poll.createdBy - User who created the poll
+ * @param {string} props.poll.validUntil - Poll expiration date
+ * @returns {JSX.Element} Rendered VotingCard
+ */
 const VotingCard = ({ poll }) => {
-    //----------------------------constants variables-------------------------------
+    /** Currently logged-in user */
     const loggedUser = JSON.parse(localStorage.getItem("user"));
     const userId = loggedUser?.id;
 
+    /** Poll options with vote data */
     const [options, setOptions] = useState(
         poll.options.map((o) => ({ ...o, votes: o.votes || [] }))
     );
+
+    /** Currently selected option ID for voting */
     const [selectedOptionId, setSelectedOptionId] = useState(null);
+
+    /** Option ID for which the user has already voted */
     const [existingVoteOptionId, setExistingVoteOptionId] = useState(null);
+
+    /** Flag if the user has already voted */
     const [alreadyVoted, setAlreadyVoted] = useState(false);
+
+    /** Flag to control edit mode for changing votes */
     const [editMode, setEditMode] = useState(false);
 
+    /** Boolean to indicate if the poll has expired */
     const isExpired =
-        !poll.validUntil || new Date(poll.validUntil) < new Date() || !poll.options || poll.options.length === 0;
+        !poll.validUntil ||
+        new Date(poll.validUntil) < new Date() ||
+        !poll.options ||
+        poll.options.length === 0;
 
-    // ----------------check if the user already voted ----------------
     useEffect(() => {
         const userVote = poll.options.find((opt) =>
             opt.votes?.some((v) => v.voterId === userId)
@@ -31,7 +57,6 @@ const VotingCard = ({ poll }) => {
         }
     }, [poll, userId]);
 
-    // -------------load vote counts------------------------
     useEffect(() => {
         const loadCounts = async () => {
             try {
@@ -46,7 +71,10 @@ const VotingCard = ({ poll }) => {
         loadCounts();
     }, [poll.id]);
 
-    //----------------------------voting-------------------------------
+    /**
+     * Handles submitting a vote for the selected option.
+     * Calls backend API and updates local vote count state.
+     */
     const handleVote = async () => {
         if (!selectedOptionId) return alert("Select an option first");
 
@@ -73,7 +101,10 @@ const VotingCard = ({ poll }) => {
         }
     };
 
-    //----------------------------saving changes-------------------------------
+    /**
+     * Handles saving a changed vote when in edit mode.
+     * Updates the vote in backend and refreshes vote counts.
+     */
     const handleSave = async () => {
         if (!selectedOptionId) return alert("Select an option");
 
@@ -101,7 +132,7 @@ const VotingCard = ({ poll }) => {
         }
     };
 
-//------------------cancel edited votes-------------------------
+    /** Cancels editing vote and restores previous selection */
     const handleCancel = () => {
         setSelectedOptionId(existingVoteOptionId);
         setEditMode(false);

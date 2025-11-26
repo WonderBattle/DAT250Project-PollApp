@@ -2,18 +2,29 @@ import React, { useEffect, useState } from "react";
 import "../styles/VotingCard.css";
 import { createVoteApi, getPollResults } from "../apiConfig/pollApi";
 
+/**
+ * PublicVotingCard renders a public poll where users can vote without logging in.
+ * Displays the poll question, options with current vote counts and allows unlimited voting.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {Object} props.poll - Poll object containing metadata and options
+ * @param {string} props.poll.id - Unique ID of the poll
+ * @param {string} props.poll.question - Poll question text
+ * @param {Array} props.poll.options - Array of poll options
+ * @param {Object} props.poll.createdBy - User who created the poll
+ * @param {string} props.poll.publishedAt - Poll creation date
+ * @param {string} props.poll.validUntil - Poll expiration date
+ * @returns {JSX.Element} Rendered PublicVotingCard
+ */
 const PublicVotingCard = ({ poll }) => {
+    /** Selected option ID for voting */
     const [selectedOptionId, setSelectedOptionId] = useState(null);
+
+    /** Poll options with votes count */
     const [options, setOptions] = useState(
         poll.options ? poll.options.map((o) => ({ ...o, votesCount: o.votesCount || 0 })) : []
     );
-    const [alreadyVoted, setAlreadyVoted] = useState(false);
-
-    // ----------------check if user already voted today----------------
-    useEffect(() => {
-        const votedPolls = JSON.parse(localStorage.getItem("publicVotes") || "[]");
-        setAlreadyVoted(votedPolls.includes(poll.id));
-    }, [poll.id]);
 
     // ----------------fetch vote counts----------------
     useEffect(() => {
@@ -33,7 +44,10 @@ const PublicVotingCard = ({ poll }) => {
         fetchVoteCounts();
     }, [poll.id]);
 
-    // ----------------handle voting----------------
+    /**
+     * Handles voting for the selected option.
+     * Updates vote counts after submitting.
+     */
     const handleVote = async () => {
         if (!selectedOptionId) return alert("Please select an option!");
 
@@ -45,12 +59,6 @@ const PublicVotingCard = ({ poll }) => {
 
             alert("Vote submitted!");
 
-            // mark as voted in localStorage
-            const votedPolls = JSON.parse(localStorage.getItem("publicVotes") || "[]");
-            localStorage.setItem("publicVotes", JSON.stringify([...votedPolls, poll.id]));
-            setAlreadyVoted(true);
-
-            // update votes count
             const results = await getPollResults(poll.id);
             setOptions((prevOptions) =>
                 prevOptions.map((opt) => ({
@@ -59,12 +67,8 @@ const PublicVotingCard = ({ poll }) => {
                 }))
             );
         } catch (err) {
-            if (err.response?.status === 409) {
-                alert("You have already voted today.");
-                setAlreadyVoted(true);
-            } else {
-                alert("Voting failed");
-            }
+            console.error("Voting failed", err);
+            alert("Voting failed. Please try again.");
         }
     };
 
@@ -79,10 +83,6 @@ const PublicVotingCard = ({ poll }) => {
                         {poll.validUntil ? new Date(poll.validUntil).toLocaleDateString() : "N/A"}
                     </p>
                 </div>
-
-                {alreadyVoted && (
-                    <span className="expired-label">You already voted today</span>
-                )}
             </div>
 
             <div className="poll-body">
@@ -94,7 +94,6 @@ const PublicVotingCard = ({ poll }) => {
                                 name={`poll-${poll.id}`}
                                 checked={selectedOptionId === opt.id}
                                 onChange={() => setSelectedOptionId(opt.id)}
-                                disabled={alreadyVoted}
                             />
                             <span>
                                 {opt.caption} ({opt.votesCount} votes)
@@ -104,11 +103,9 @@ const PublicVotingCard = ({ poll }) => {
                 </div>
 
                 <div className="poll-buttons">
-                    {!alreadyVoted && (
-                        <button className="vote-btn" onClick={handleVote}>
-                            Vote
-                        </button>
-                    )}
+                    <button className="vote-btn" onClick={handleVote}>
+                        Vote
+                    </button>
                 </div>
             </div>
         </div>

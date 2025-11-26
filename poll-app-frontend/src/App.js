@@ -6,6 +6,19 @@ import VotingPage from "./pages/VotingPage";
 import PublicDashboardPage from "./pages/PublicDashboardPage";
 import PublicVotingPage from "./pages/PublicVotingPage";
 
+/**
+ * App component defines all the frontend routes for the Poll App.
+ *
+ * Routes:
+ *  "/"                  - Home page (login/register)
+ *  "/dashboard"         - User's dashboard for managing polls
+ *  "/votingpage"        - Page showing all polls for voting
+ *  "/publicdashboard"   - Public polls dashboard
+ *  "/vote/public/:pollId" - Public voting page for a specific poll
+ *
+ * @component
+ * @returns {JSX.Element} The root component with defined routes.
+ */
 function App() {
     return (
         <Routes>

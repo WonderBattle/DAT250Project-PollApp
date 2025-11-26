@@ -1,18 +1,33 @@
 import React, { useEffect, useState } from "react";
 import PollCard from "../components/PollCard";
 import Header from "../components/Header";
-import CreatePollCard from "../components/CreatePollCard"
+import CreatePollCard from "../components/CreatePollCard";
 import "../styles/Dashboard.css";
 import { deletePoll, usersPoll } from "../apiConfig/pollApi";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * Dashboard page showing polls created by the current user.
+ * Allows creating, deleting polls and toggling between active/expired polls.
+ *
+ * @component
+ * @returns {JSX.Element} Rendered Dashboard component
+ */
 const Dashboard = () => {
+    /** Array of polls fetched from the backend */
     const [polls, setPolls] = useState([]);
+
+    /** Flag to show/hide the CreatePollCard modal */
     const [showCreatePollCard, setShowCreatePollCard] = useState(false);
+
+    /** Current logged-in user object */
     const [currentUser, setCurrentUser] = useState(null);
+
+    /** Flag to toggle between showing active or expired polls */
     const [showActiveOnly, setShowActiveOnly] = useState(true);
 
     const navigate = useNavigate();
+
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
@@ -33,6 +48,10 @@ const Dashboard = () => {
         fetchPolls();
     }, [currentUser]);
 
+    /**
+     * Deletes a poll both in backend and locally
+     * @param {string} pollId - ID of the poll to delete
+     */
     const handleDeletePoll = async (pollId) => {
         try {
             await deletePoll(pollId);
@@ -42,13 +61,14 @@ const Dashboard = () => {
         }
     };
 
+    /** Filter polls based on active/expired toggle */
     const filteredPolls = polls.filter((poll) => {
         const now = new Date();
         const validUntil = new Date(poll.validUntil);
         const isActive = validUntil > now;
         return showActiveOnly ? isActive : !isActive;
     });
-    //-------------------html return------------------------------
+
     return (
         <div className="desktop-1">
             <Header />

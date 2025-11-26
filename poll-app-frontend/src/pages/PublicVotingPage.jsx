@@ -5,9 +5,21 @@ import PublicVotingCard from "../components/PublicVotingCard";
 import "../styles/VotingPage.css";
 import { getPollById } from "../apiConfig/pollApi";
 
+/**
+ * PublicVotingPage renders a single public poll for voting.
+ * Fetches the poll by ID from the backend and displays it using PublicVotingCard.
+ *
+ * @component
+ * @returns {JSX.Element} Rendered PublicVotingPage
+ */
 const PublicVotingPage = () => {
+    /** Poll ID extracted from route parameters */
     const { pollId } = useParams();
+
+    /** Poll object fetched from the backend */
     const [poll, setPoll] = useState(null);
+
+    /** Router navigation function */
     const navigate = useNavigate();
 
     useEffect(() => {

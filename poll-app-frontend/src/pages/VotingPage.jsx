@@ -5,11 +5,24 @@ import VotingCard from "../components/VotingCard";
 import "../styles/VotingPage.css";
 import { getAllPolls } from "../apiConfig/pollApi";
 
+/**
+ * VotingPage renders all polls for a logged-in user.
+ * Users can view active or expired polls and vote on them using VotingCard.
+ *
+ * @component
+ * @returns {JSX.Element} Rendered VotingPage
+ */
 const VotingPage = () => {
+    /** All polls fetched from the backend */
     const [polls, setPolls] = useState([]);
+
+    /** Toggle to show only active polls */
     const [showActiveOnly, setShowActiveOnly] = useState(true);
+
+    /** Router navigation function */
     const navigate = useNavigate();
 
+    /** Currently logged-in user from localStorage */
     const loggedUser = JSON.parse(localStorage.getItem("user"));
 
     useEffect(() => {
@@ -24,7 +37,6 @@ const VotingPage = () => {
         fetchPolls();
     }, []);
 
-    // ----------- filter active / expired polls -----------
     const filteredPolls = polls.filter(poll => {
         const now = new Date();
         const validUntil = new Date(poll.validUntil);
@@ -32,7 +44,6 @@ const VotingPage = () => {
         return showActiveOnly ? isActive : !isActive;
     });
 
-    //----------------------html return------------------------
     return (
         <div className="desktop-1">
             <Header />
