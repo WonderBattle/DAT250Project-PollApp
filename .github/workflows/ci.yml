@@ -7,12 +7,13 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
 
     services:
       redis:
         image: redis:7.2-alpine
+        # Health checks ensure the container is ready before steps begin
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -42,26 +43,26 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'gradle' # <--- ADDED: Caches dependencies to speed up builds
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Wait for services to be ready
-        run: |
-          # Wait for Redis
-          timeout 30s bash -c 'until nc -z localhost 6379; do echo "Waiting for Redis..."; sleep 2; done'
-          echo "Redis is ready!"
-          
-          # Wait for RabbitMQ
-          timeout 30s bash -c 'until nc -z localhost 5672; do echo "Waiting for RabbitMQ..."; sleep 2; done'
-          echo "RabbitMQ is ready!"
+      # Removed manual 'Wait for services' step.
+      # The service containers' health checks handle this automatically.
 
-      - name: Run tests
-        run: ./gradlew test -Dspring.profiles.active=test
+      # The 'build' task in Gradle usually includes 'test',
+      # but running them explicitly ensures clarity.
+      - name: Build and Test with Gradle
+        run: ./gradlew build -Dspring.profiles.active=test
+
+      # Optional: Verify the jar was actually created
+      - name: List build artifacts
+        run: ls -la build/libs/
 
       - name: Upload test reports
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() # Runs even if tests fail
         with:
           name: test-reports
           path: build/reports/tests/test
