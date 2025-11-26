@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # --- YOUR SERVICES ---
+
+  backend:
+    build: .  # This tells Docker: "Build the Dockerfile in this folder"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - rabbitmq
+      - redis
+    environment:
+      # We tell Spring Boot where to find the other containers
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_DATA_REDIS_HOST=redis
+
+  frontend:
+    build: ./poll-app-frontend # Build the Dockerfile in the frontend folder
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  # --- EXTERNAL SERVICES (We download these) ---
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
