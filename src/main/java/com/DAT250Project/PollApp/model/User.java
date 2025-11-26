@@ -6,133 +6,116 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.*;
 
+/**
+ * Represents an application user who may create polls and cast votes.
+ */
 @Entity
 @Table(name = "users")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
+    /** Unique identifier for the user. */
     @Id
     @GeneratedValue
     private UUID id;
 
-    //DONE: revise if we want unique or not - We want unique, important for security
+    /** Username of the user (unique). */
     @Column(unique = true, nullable = false)
     private String username;
 
+    /** Email address (unique). */
     @Column(unique = true, nullable = false)
     private String email;
 
-    // ---------- NEW : Security -------------------
-    // password (BCrypt hashed) - do NOT expose it in API responses
+    /** Hashed password (write-only in JSON). */
     @Column(nullable = false)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // don't serialize back to client
-    //@JsonProperty(access = WRITE_ONLY) ensures the password can be set from requests but not sent back in responses.
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    // role - simple string; default "ROLE_USER" - Usefull if later we want to change funcionalities like you can vote like anonymus
+    /** Role of the user (default: ROLE_USER). */
     @Column(nullable = false)
     private String role = "ROLE_USER";
 
+    /** Polls created by this user. */
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore // Completely ignore this collection in JSON
+    @JsonIgnore
     private Set<Poll> createdPolls = new LinkedHashSet<>();
 
+    /** Votes made by this user. */
     @OneToMany(mappedBy = "voter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore // Completely ignore this collection
+    @JsonIgnore
     private Set<Vote> votes = new LinkedHashSet<>();
 
-    //CONSTRUCTORS
+    /**
+     * Constructor with required fields.
+     */
     public User(String username, String email) {
         this.username = username;
         this.email = email;
-        //this.createdPolls = new LinkedHashSet<>();
     }
 
-    public User(){}
+    /** Default constructor. */
+    public User() {}
 
-    //SETTERS AND GETTERS
+    /** Sets the user ID. */
+    public void setId(UUID id) { this.id = id; }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-    public UUID getId() {
-        return id;
-    }
+    /** Returns the user ID. */
+    public UUID getId() { return id; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-    public String getUsername() {
-        return username;
-    }
+    /** Sets the username. */
+    public void setUsername(String username) { this.username = username; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    public String getEmail() {
-        return email;
-    }
+    /** Returns the username. */
+    public String getUsername() { return username; }
 
+    /** Sets the user's email. */
+    public void setEmail(String email) { this.email = email; }
+
+    /** Returns the user's email. */
+    public String getEmail() { return email; }
+
+    /** Sets the password. */
     public void setPassword(String password) { this.password = password; }
+
+    /** Returns the hashed password. */
     public String getPassword() { return password; }
 
+    /** Sets the user's role. */
     public void setRole(String role) { this.role = role; }
+
+    /** Returns the user's role. */
     public String getRole() { return role; }
 
-    //Relational setters and getters
-    public void setCreatedPolls(Set<Poll> createdPolls) {
-        this.createdPolls = createdPolls;
-    }
-    public Set<Poll> getCreatedPolls() {
-        return createdPolls;
-    }
+    /** Sets the user's created polls. */
+    public void setCreatedPolls(Set<Poll> createdPolls) { this.createdPolls = createdPolls; }
 
-    public void setVotes(Set<Vote> votes) {
-        this.votes = votes;
-    }
-    public Set<Vote> getVotes() {
-        return votes;
-    }
+    /** Returns the polls created by the user. */
+    public Set<Poll> getCreatedPolls() { return createdPolls; }
 
-    //METHODS: An User can:
-    // 1. Create a Poll -> createPoll(String question)
-    // 2. Vote in a Poll -> voteFor()
+    /** Sets the user's votes. */
+    public void setVotes(Set<Vote> votes) { this.votes = votes; }
 
-    // 1. Create a poll
-    //TODO choose a method: using default constructor or parameter constructor
-    /*public Poll createPoll(String question) {
-        Poll poll = new Poll(question, this);
-        this.createdPolls.add(poll);
-        poll.setCreatedBy(this);
-        return poll;
-    */
+    /** Returns the user's cast votes. */
+    public Set<Vote> getVotes() { return votes; }
 
+    /**
+     * Creates a poll for this user.
+     */
     public Poll createPoll(String question) {
         Poll poll = new Poll();
         poll.setQuestion(question);
         poll.setCreatedBy(this);
         this.createdPolls.add(poll);
-        //poll.setPublishedAt(Instant.now()); CLARA
-        //poll.setValidUntil(Instant.now().plus(30, ChronoUnit.DAYS)); CLARA
         return poll;
     }
 
-    // 2. Vote in a Poll
-    //TODO choose which Vote constructor use
+    /**
+     * Casts a vote for a specific vote option.
+     */
     public Vote voteFor(VoteOption option) {
         Vote vote = new Vote(this, option);
         this.votes.add(vote);
         return vote;
     }
-
-    /*
-    public Vote voteFor(VoteOption option) {
-        Poll poll = option.getPoll();
-        Vote vote = new Vote(this, poll, option);
-        this.votes.add(vote);
-        return vote;
-    }
-     */
-
-
 }

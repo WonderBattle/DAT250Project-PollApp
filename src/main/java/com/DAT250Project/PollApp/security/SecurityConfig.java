@@ -1,7 +1,14 @@
 package com.DAT250Project.PollApp.security;
 
-// ------------------ Imports ------------------
-// These are all necessary Spring Security and Spring Framework classes.
+/**
+ * Security configuration class for the PollApp backend.
+ * Configures authentication, authorization, password encoding, JWT filters,
+ * and CORS rules for the application.
+ *
+ * <p>This configuration uses Spring Security with JWT-based stateless authentication.
+ * No sessions or CSRF protection are used.</p>
+ */
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +28,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-// ------------------ Configuration Class ------------------
-@Configuration  // Marks this class as a Spring configuration file.
-@EnableMethodSecurity  // Enables method-level annotations like @PreAuthorize (optional, for future use)
+@Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     // Inject our custom JWT filter that will validate tokens on each request
@@ -34,53 +40,74 @@ public class SecurityConfig {
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
 
-    // ------------------ Password Encoder Bean ------------------
+    /**
+     * Creates a BCrypt password encoder bean.
+     * Used for hashing and validating user passwords.
+     *
+     * @return PasswordEncoder (BCrypt)
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         // BCrypt hashes passwords before storing in DB (very secure)
         return new BCryptPasswordEncoder();
     }
 
-    // ------------------ Authentication Provider ------------------
+    /**
+     * Configures the authentication provider used by Spring Security.
+     * This provider uses the CustomUserDetailsService and the BCrypt password encoder.
+     *
+     * @return DaoAuthenticationProvider
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         // This connects Spring Security's authentication system
         // with our custom user loading logic and password encoder
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(customUserDetailsService); // who loads users
-        authProvider.setPasswordEncoder(passwordEncoder()); // how to verify passwords
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
 
-    // ------------------ Authentication Manager ------------------
+    /**
+     * Provides the authentication manager used for login operations.
+     *
+     * @param config Authentication configuration provided by Spring
+     * @return AuthenticationManager
+     * @throws Exception if authentication manager cannot be retrieved
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         // Provides a way to authenticate users manually (used in AuthController during login)
         return config.getAuthenticationManager();
     }
 
-    // ------------------ Main Security Configuration ------------------
+    /**
+     * Main Spring Security filter chain configuration.
+     * Defines authorization rules, disables CSRF, enables CORS, and registers the JWT filter.
+     *
+     * @param http HttpSecurity object provided by Spring
+     * @return SecurityFilterChain configured filter chain
+     * @throws Exception on configuration failure
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // This defines how Spring Security should secure HTTP requests.
+
         http
-                // Disable CSRF since we use JWT (not cookies or sessions)
+                // Disable CSRF since JWT is stateless
                 .csrf(csrf -> csrf.disable())
 
-                // Enable CORS with the custom configuration (defined below)
+                // Enable CORS rules defined in corsConfigurationSource()
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // Allow the H2 database console to work (frames are blocked by default)
-                //.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                // Allow the H2 console to load correctly
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
 
-
-                // Define which requests are allowed without authentication
+                // Authorization rules for endpoints
                 .authorizeHttpRequests(auth -> auth
                         // Allow anonymous access to these endpoints
                         .requestMatchers("/auth/**", "/polls/public", "/polls/*/options").permitAll()
                         .requestMatchers("/auth/login", "/auth/**").permitAll()
-                        .requestMatchers("/polls/*/votes").permitAll() // Allow anonymous votes
+                        .requestMatchers("/polls/*/votes").permitAll()
                         .requestMatchers("/users", "/users/**").permitAll()
                         // Swagger UI
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
@@ -88,49 +115,50 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/polls/**").permitAll()
                         // Protect other endpoints
                         .requestMatchers("/polls", "/polls/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/polls/user/{userId}").authenticated() // We'll handle authorization in service layer
+                        .requestMatchers(HttpMethod.GET, "/polls/user/{userId}").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/polls/*/privacy").authenticated()
                         .anyRequest().authenticated()
                 )
 
-                // Connect our authentication provider (user + password logic)
+                // Connect custom authentication provider
                 .authenticationProvider(authenticationProvider())
 
-                // Register our JWT filter before the built-in authentication filter
+                // Register custom JWT filter before username/password authentication
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         // Finally, build and return the complete security configuration
         return http.build();
     }
 
-    // ------------------ CORS Configuration ------------------
+    /**
+     * CORS configuration bean for allowing the frontend (React) to communicate with backend.
+     *
+     * @return CorsConfigurationSource containing allowed origins, headers, and methods
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        // Create a configuration object describing what origins and headers are allowed
+
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // The URL of your React frontend (change if using another port)
+        // Allowed frontend origin (React)
         configuration.setAllowedOrigins(List.of("http://localhost:3000"));
 
-        // The HTTP methods your app can use
+        // Allowed request methods
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // The request headers the frontend is allowed to send
+        // Allowed headers sent from frontend
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-        //configuration.setAllowedHeaders(List.of("*"));
 
-        // Headers that the backend can expose to the frontend (optional)
+        // Headers exposed back to frontend
         configuration.setExposedHeaders(List.of("Authorization"));
 
-        // Credentials (cookies) are not needed for JWT, so we set false
+        // No cookies required for JWT
         configuration.setAllowCredentials(false);
-        //configuration.setAllowCredentials(true);
 
         // Register this configuration for all paths in the app
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
-        // Return the final CORS configuration
         return source;
     }
 }

@@ -13,7 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-//PollController — manages polls and their options.
+/**
+ * Controller responsible for managing polls and their vote options.
+ * Provides REST endpoints for creating, retrieving, updating, and deleting polls,
+ * as well as managing vote options associated with them.
+ */
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/polls")
@@ -22,12 +26,21 @@ public class PollController {
 
     private final PollManager pollManager;
 
-    //CONSTRUCTOR
+    /**
+     * Constructs the PollController with the required PollManager dependency.
+     *
+     * @param pollManager the service layer managing poll operations
+     */
     public PollController(PollManager pollManager) {
         this.pollManager = pollManager;
     }
 
-    //Create a poll
+    /**
+     * Creates a new poll.
+     *
+     * @param poll the poll data to create
+     * @return the created poll wrapped in a ResponseEntity with HTTP 201 status
+     */
     @Operation(summary = "Create a new poll", description = "Creates a new poll and returns it")
     @PostMapping
     public ResponseEntity<Poll> createPoll(@RequestBody Poll poll) {
@@ -35,36 +48,58 @@ public class PollController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPoll); // CREATED = 201
     }
 
-    //Get all polls
+    /**
+     * Retrieves all polls.
+     *
+     * @return a list of all polls with HTTP 200 status
+     */
     @Operation(summary = "Get all polls", description = "Returns a list of all polls")
     @GetMapping
     public ResponseEntity<List<Poll>> getAllPolls() {
         return ResponseEntity.ok(pollManager.getAllPolls()); // OK = 200
     }
 
-    // Get all public polls (visible to everyone)
+    /**
+     * Retrieves all public polls.
+     *
+     * @return a list of public polls with HTTP 200 status
+     */
     @Operation(summary = "Get public polls", description = "Returns a list of all the public polls")
     @GetMapping("/public")
     public ResponseEntity<List<Poll>> getPublicPolls() {
         return ResponseEntity.ok(pollManager.getPublicPolls());
     }
 
-    // Get all private polls of a specific user
+    /**
+     * Retrieves all private polls belonging to a specific user.
+     *
+     * @param userId the UUID of the user
+     * @return a list of the user's private polls with HTTP 200 status
+     */
     @Operation(summary = "Get private polls of an user", description = "Returns a list of all the privates polls from an user")
     @GetMapping("/private/{userId}")
     public ResponseEntity<List<Poll>> getPrivatePolls(@PathVariable UUID userId) {
         return ResponseEntity.ok(pollManager.getPrivatePolls(userId));
     }
 
-    // Get all polls from an user
+    /**
+     * Retrieves all polls (public + private) from a specific user.
+     *
+     * @param userId the UUID of the user
+     * @return a list of all polls created by the user with HTTP 200 status
+     */
     @Operation(summary = "Get private and public polls of an user", description = "Returns a list of all the polls from an user")
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Poll>> getUserPolls(@PathVariable UUID userId) {
         return ResponseEntity.ok(pollManager.getPollsByUser(userId));
     }
 
-
-    //Get poll by id
+    /**
+     * Retrieves a poll by its ID.
+     *
+     * @param pollId the UUID of the poll to retrieve
+     * @return the poll if found, otherwise 404 NOT FOUND
+     */
     @Operation(summary = "Get a poll", description = "Get a poll by its ID")
     @GetMapping("/{pollId}")
     public ResponseEntity<Poll> getPollById(@PathVariable UUID pollId) {
@@ -75,7 +110,14 @@ public class PollController {
         return  ResponseEntity.ok(poll); // OK = 200
     }
 
-    // Update the privacy of a poll (private or public)
+    /**
+     * Updates the privacy setting of a poll.
+     *
+     * @param pollId   the UUID of the poll to update
+     * @param isPublic true if the poll should be public, false if private
+     * @param userId   the UUID of the user attempting the update
+     * @return the updated poll or 404 NOT FOUND if the poll does not exist
+     */
     @Operation(summary = "Update poll privacy status", description = "Update whether a poll is public or private")
     @PutMapping("/{pollId}/privacy")
     public ResponseEntity<Poll> updatePollPrivacy(@PathVariable UUID pollId,
@@ -89,8 +131,12 @@ public class PollController {
         return ResponseEntity.ok(updatedPoll);
     }
 
-    //Delete a poll by id
-    //TODO choose between return a Poll or a boolean
+    /**
+     * Deletes a poll by its ID.
+     *
+     * @param pollId the UUID of the poll to delete
+     * @return 204 NO CONTENT if deleted, or 404 NOT FOUND if not found
+     */
     @Operation(summary = "Delete a poll", description = "Deletes a poll by its ID")
     @DeleteMapping("/{pollId}")
     public ResponseEntity<Poll> deletePoll(@PathVariable UUID pollId) {
@@ -101,18 +147,13 @@ public class PollController {
         return ResponseEntity.noContent().build();  //NO CONTENT = 204
     }
 
-    /*
-    public ResponseEntity<Void> deletePoll(@PathVariable UUID pollId) {
-        boolean deleted = pollManager.deletePollById(pollId);
-        if (deleted) {
-            return ResponseEntity.noContent().build();  //NO CONTENT = 204
-        }else{
-            return ResponseEntity.notFound().build();  //NOT FOUND = 404
-        }
-    }
+    /**
+     * Adds a vote option to a poll.
+     *
+     * @param pollId the UUID of the poll
+     * @param option the vote option to add
+     * @return the created vote option with HTTP 201 status, or 404 if poll not found
      */
-
-    //Add a vote option to a poll
     @Operation(summary = "Add an option", description = "Add an option to a poll by ID")
     @PostMapping("/{pollId}/options")
     public ResponseEntity<VoteOption> addOption(@PathVariable UUID pollId, @RequestBody VoteOption option) {
@@ -123,7 +164,13 @@ public class PollController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created); // CREATED = 201
     }
 
-    //Get poll by id
+    /**
+     * Retrieves an option by its ID.
+     *
+     * @param pollId   the UUID of the poll
+     * @param optionId the UUID of the option
+     * @return the vote option or 404 NOT FOUND if not found
+     */
     @Operation(summary = "Get an option by id", description = "Get a option by its ID")
     @GetMapping("/{pollId}/options/{optionId}")
     public ResponseEntity<VoteOption> getOptionById(@PathVariable UUID pollId, @PathVariable UUID optionId) {
@@ -134,7 +181,13 @@ public class PollController {
         return  ResponseEntity.ok(voteOption); // OK = 200
     }
 
-    //Delete a vote option of a poll
+    /**
+     * Deletes a vote option from a poll.
+     *
+     * @param pollId   the UUID of the poll
+     * @param optionId the UUID of the option
+     * @return 204 NO CONTENT if deleted, 404 if not found
+     */
     @Operation(summary = "Delete a vote option", description = "Deletes a vote option by its ID")
     @DeleteMapping("/{pollId}/options/{optionId}")
     public ResponseEntity<VoteOption> deleteOption(@PathVariable UUID pollId, @PathVariable UUID optionId) {
@@ -145,7 +198,12 @@ public class PollController {
         return ResponseEntity.noContent().build();
     }
 
-    //Get all vote options in a poll
+    /**
+     * Retrieves all vote options for a poll.
+     *
+     * @param pollId the UUID of the poll
+     * @return list of vote options or 404 if poll does not exist
+     */
     @Operation(summary = "Get all options", description = "Get all options of a poll by its ID")
     @GetMapping("/{pollId}/options")
     public ResponseEntity<List<VoteOption>> getAllOptions (@PathVariable UUID pollId) {
@@ -154,7 +212,13 @@ public class PollController {
         }
         return ResponseEntity.ok(pollManager.getAllOptionsByPoll(pollId)); // OK = 200
     }
-    // GET /polls/{pollId}/results so counting the votes
+
+    /**
+     * Retrieves vote count results for each option in a poll.
+     *
+     * @param pollId the UUID of the poll
+     * @return a map of optionId to vote count, or 404 if poll not found
+     */
     @Operation(summary = "Get vote counts per option", description = "Returns vote counts for each option in a poll")
     @GetMapping("/{pollId}/results")
     public ResponseEntity<Map<UUID, Long>> getPollResults(@PathVariable UUID pollId) {
